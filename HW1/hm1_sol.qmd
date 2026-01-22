@@ -13,6 +13,7 @@ format:
     code-fold: false
     link-external-icon: true
     link-external-newwindow: true
+
 ---
 
 Display machine information for reproducibility:
@@ -47,7 +48,7 @@ This exercise (and later in this course) uses the [MIMIC-IV data v3.1](https://p
 ```{bash}
 #| eval: true
 # content of mimic folder
-ls -l ~/OneDrive\ -\ UCLA\ IT\ Services/mimic/
+ls -l ~/mimic/
 
 ```
 
@@ -63,16 +64,30 @@ Use Bash commands to answer following questions.
 ```{bash}
 #| eval: true
 # contents of hosp folder
-ls -l ~/mimic/hosp/
+ls -l ~/mimic/physionet.org/files/mimiciv/3.1/hosp
+ls -l ~/mimic/physionet.org/files/mimiciv/3.1/icu
 ```
 
 3.  Briefly describe what Bash commands `zcat`, `zless`, `zmore`, and `zgrep` do.
+```{bash}
+#| eval: true
+docker run --rm \
+  -v "/Users/xuzhiwei/Library/CloudStorage/OneDrive-UCLAITServices/mimic/physionet.org/files/mimiciv:/mimiciv:ro" \
+  ubuntu \
+  bash -c "zcat /mimiciv/3.1/hosp/admissions.csv.gz | head"
+```
+**Solution to Q3:**
+- `zcat`: outputs the contents of a gzip-compressed file to standard output without uncompressing it to disk.
+- `zless`: This command allows you to view the contents of compressed files one screen at a time, similar to the `less` command for uncompressed files. It is useful for reading large compressed files.
+- `zmore`: Similar to `zless`, this command allows you to view the contents of compressed files one screen at a time, but it uses the `more` command style of pagination.
+- `zgrep`: This command is used to search for specific patterns within compressed files. It works like the `grep` command but operates on .gz files directly.
+
 
 4.  (Looping in Bash) What's the output of the following bash script?
 
 ```{bash}
 #| eval: false
-for datafile in ~/mimic/hosp/{a,l,pa}*.gz
+for datafile in ~/mimiciv/3.1/hosp/{a,l,pa}*.gz
 do
   ls -l $datafile
 done
@@ -105,7 +120,7 @@ wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
 for char in Elizabeth Jane Lydia Darcy
 do
   echo $char:
-  # some bash commands here
+  zcat < pg42671.txt | grep -o -i $char | wc -l
 done
 ```
 
