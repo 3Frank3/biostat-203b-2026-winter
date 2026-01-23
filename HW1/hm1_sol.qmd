@@ -75,10 +75,11 @@ docker run --rm \
   -v "/Users/xuzhiwei/Library/CloudStorage/OneDrive-UCLAITServices/mimic/physionet.org/files/mimiciv:/mimiciv:ro" \
   ubuntu \
   bash -c "zcat /mimiciv/3.1/hosp/admissions.csv.gz | head"
+
 ```
 **Solution to Q3:**
-- `zcat`: outputs the contents of a gzip-compressed file to standard output without uncompressing it to disk.
-- `zless`: This command allows you to view the contents of compressed files one screen at a time, similar to the `less` command for uncompressed files. It is useful for reading large compressed files.
+- `zcat`: zcat outputs the contents of a gzip-compressed file to standard output without uncompressing it to disk.
+- `zless`: zless uses less to view the contents of gzip-compressed files interactively
 - `zmore`: Similar to `zless`, this command allows you to view the contents of compressed files one screen at a time, but it uses the `more` command style of pagination.
 - `zgrep`: This command is used to search for specific patterns within compressed files. It works like the `grep` command but operates on .gz files directly.
 
