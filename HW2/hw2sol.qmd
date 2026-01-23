@@ -1,7 +1,7 @@
 ---
 title: "Biostat 203B Homework 2"
 subtitle: Due Feb 8, 2026 @ 11:59PM
-author: "Your Name and UID"
+author: "CHIH WEI HSU, UID: 706788612"
 format:
   html:
     theme: cosmo
@@ -41,11 +41,11 @@ In this exercise, we explore various tools for ingesting the [MIMIC-IV](https://
 Display the contents of MIMIC `hosp` and `icu` data folders:
 
 ```{bash}
-ls -l ~/mimic/hosp/
+ls -l ~/mimic/physionet.org/files/mimiciv/3.1/hosp
 ```
 
 ```{bash}
-ls -l ~/mimic/icu/
+ls -l ~/mimic/physionet.org/files/mimiciv/3.1/icu/
 ```
 
 ## Q1. `read.csv` (base R) vs `read_csv` (tidyverse) vs `fread` (data.table)
