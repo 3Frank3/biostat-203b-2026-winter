@@ -13,7 +13,9 @@ format:
     code-fold: false
     link-external-icon: true
     link-external-newwindow: true
-
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
 Display machine information for reproducibility:
@@ -25,39 +27,82 @@ sessionInfo()
 
 ## Q1. Git/GitHub
 
-**No handwritten homework reports are accepted for this course.** We work with Git and GitHub. Efficient and abundant use of Git, e.g., frequent and well-documented commits, is an important criterion for grading your homework.
+**No handwritten homework reports are accepted for this course.** We
+work with Git and GitHub. Efficient and abundant use of Git, e.g.,
+frequent and well-documented commits, is an important criterion for
+grading your homework.
 
-1.  Apply for the [Student Developer Pack](https://education.github.com/pack) at GitHub using your UCLA email. You'll get GitHub Pro account for free (unlimited public and private repositories).
+1.  Apply for the [Student Developer
+    Pack](https://education.github.com/pack) at GitHub using your UCLA
+    email. You'll get GitHub Pro account for free (unlimited public and
+    private repositories).
 
-2.  Create a **private** repository `biostat-203b-2026-winter` and add `Hua-Zhou` and TA team (`BowenZhang2001` for Lec 1; `Tomoki-Okuno` and `yucais` for Lec 82) as your collaborators with write permission.
+2.  Create a **private** repository `biostat-203b-2026-winter` and add
+    `Hua-Zhou` and TA team (`BowenZhang2001` for Lec 1; `Tomoki-Okuno`
+    and `yucais` for Lec 82) as your collaborators with write
+    permission.
 
-3.  Top directories of the repository should be `hw1`, `hw2`, ... Maintain two branches `main` and `develop`. The `develop` branch will be your main playground, the place where you develop solution (code) to homework problems and write up report. The `main` branch will be your presentation area. Submit your homework files (Quarto file `qmd`, `html` file converted by Quarto, all code and extra data sets to reproduce results) in the `main` branch.
+3.  Top directories of the repository should be `hw1`, `hw2`, ...
+    Maintain two branches `main` and `develop`. The `develop` branch
+    will be your main playground, the place where you develop solution
+    (code) to homework problems and write up report. The `main` branch
+    will be your presentation area. Submit your homework files (Quarto
+    file `qmd`, `html` file converted by Quarto, all code and extra data
+    sets to reproduce results) in the `main` branch.
 
-4.  After each homework due date, course reader and instructor will check out your `main` branch for grading. Tag each of your homework submissions with tag names `hw1`, `hw2`, ... Tagging time will be used as your submission time. That means if you tag your `hw1` submission after deadline, penalty points will be deducted for late submission.
+4.  After each homework due date, course reader and instructor will
+    check out your `main` branch for grading. Tag each of your homework
+    submissions with tag names `hw1`, `hw2`, ... Tagging time will be
+    used as your submission time. That means if you tag your `hw1`
+    submission after deadline, penalty points will be deducted for late
+    submission.
 
-5.  After this course, you can make this repository public and use it to demonstrate your skill sets on job market.
+5.  After this course, you can make this repository public and use it to
+    demonstrate your skill sets on job market.
 
-**Solution to Q1:I followed all the steps and created the repository biostat-203b-2026-winter with required structure and collaborators.**
+**Solution to Q1:I followed all the steps and created the repository
+biostat-203b-2026-winter with required structure and collaborators.**
 
 ## Q2. Data ethics training
 
-This exercise (and later in this course) uses the [MIMIC-IV data v3.1](https://physionet.org/content/mimiciv/3.1/), a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <https://mimic.mit.edu/docs/gettingstarted/> to (1) complete the CITI `Data or Specimens Only Research` course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. **You must complete Q2 before working on the remaining questions.** (Hint: The CITI training takes a few hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.) \## Q3. Linux Shell Commands
+This exercise (and later in this course) uses the [MIMIC-IV data
+v3.1](https://physionet.org/content/mimiciv/3.1/), a freely accessible
+critical care database developed by the MIT Lab for Computational
+Physiology. Follow the instructions at
+<https://mimic.mit.edu/docs/gettingstarted/> to (1) complete the CITI
+`Data or Specimens Only Research` course and (2) obtain the PhysioNet
+credential for using the MIMIC-IV data. Display the verification links
+to your completion report and completion certificate here. **You must
+complete Q2 before working on the remaining questions.** (Hint: The CITI
+training takes a few hours and the PhysioNet credentialing takes a
+couple days; do not leave it to the last minute.) \## Q3. Linux Shell
+Commands
 
-1.  Make the MIMIC-IV v3.1 data available at location `~/mimic`. The output of the `ls -l ~/mimic` command should be similar to the below (from my laptop).
+1.  Make the MIMIC-IV v3.1 data available at location `~/mimic`. The
+    output of the `ls -l ~/mimic` command should be similar to the below
+    (from my laptop).
 
 ```{bash}
 #| eval: true
 # content of mimic folder
-ls -l ~/mimic/
+ls -l ~/mimic/Sphysionet.org/files/mimiciv/3.1
 
 ```
 
-
-Refer to the documentation <https://physionet.org/content/mimiciv/3.1/> for details of data files. Do **not** put these data files into Git; they are big. Do **not** copy them into your directory. Do **not** decompress the gz data files. These create unnecessary big files and are not big-data-friendly practices. Read from the data folder `~/mimic` directly in following exercises.
+Refer to the documentation <https://physionet.org/content/mimiciv/3.1/>
+for details of data files. Do **not** put these data files into Git;
+they are big. Do **not** copy them into your directory. Do **not**
+decompress the gz data files. These create unnecessary big files and are
+not big-data-friendly practices. Read from the data folder `~/mimic`
+directly in following exercises.
 
 Use Bash commands to answer following questions.
 
-2.  Display the contents in the folders `hosp` and `icu` using Bash command `ls -l`. Why are these data files distributed as `.csv.gz` files instead of `.csv` (comma separated values) files? Read the page <https://mimic.mit.edu/docs/iv/> to understand what's in each folder.
+2.  Display the contents in the folders `hosp` and `icu` using Bash
+    command `ls -l`. Why are these data files distributed as `.csv.gz`
+    files instead of `.csv` (comma separated values) files? Read the
+    page <https://mimic.mit.edu/docs/iv/> to understand what's in each
+    folder.
 
 **Solution to Q3.2:**
 
@@ -68,9 +113,16 @@ ls -l ~/mimic/physionet.org/files/mimiciv/3.1/hosp
 ls -l ~/mimic/physionet.org/files/mimiciv/3.1/icu
 ```
 
-The data files are distributed as `.csv.gz` files instead of `.csv` files to save storage space and reduce download time. Gzip compression significantly reduces the file size, making it more efficient to store and transfer large datasets. Additionally, working with compressed files is a common practice in big data environments to minimize disk usage and improve data handling efficiency.
+The data files are distributed as `.csv.gz` files instead of `.csv`
+files to save storage space and reduce download time. Gzip compression
+significantly reduces the file size, making it more efficient to store
+and transfer large datasets. Additionally, working with compressed files
+is a common practice in big data environments to minimize disk usage and
+improve data handling efficiency.
 
-3.  Briefly describe what Bash commands `zcat`, `zless`, `zmore`, and `zgrep` do.
+3.  Briefly describe what Bash commands `zcat`, `zless`, `zmore`, and
+    `zgrep` do.
+
 ```{bash}
 #| eval: true
 docker run --rm \
@@ -79,11 +131,14 @@ docker run --rm \
   bash -c "zcat /mimiciv/3.1/hosp/admissions.csv.gz | head"
 
 ```
-**Solution to Q3.3:**
-- `zcat`: Outputs the contents of a gzip-compressed file to standard output without uncompressing it to disk.
-- `zless`: Similar to `zcat`+`less`, zless uses less to view the contents of gzip-compressed files interactively.
-- `zmore`: Similar to `zless`, displays the contents of a gzip-compressed file page by page using more.
-- `zgrep`: Displays the contents of a gzip-compressed file page by page using more.
+
+**Solution to Q3.3:** - `zcat`: Outputs the contents of a
+gzip-compressed file to standard output without uncompressing it to
+disk. - `zless`: Similar to `zcat`+`less`, zless uses less to view the
+contents of gzip-compressed files interactively. - `zmore`: Similar to
+`zless`, displays the contents of a gzip-compressed file page by page
+using more. - `zgrep`: Displays the contents of a gzip-compressed file
+page by page using more.
 
 4.  (Looping in Bash) What's the output of the following bash script?
 
@@ -94,10 +149,16 @@ do
   ls -l $datafile
 done
 ```
-**Solution to Q3.4:**
-The output of the bash script lists the details (permissions, number of links, owner, group, size, modification date, and filename) of all files in the `~/mimic/physionet.org/files/mimiciv/3.1/hosp/` directory that start with 'a', 'l', or 'pa' and have a `.gz` extension. 
 
-Display the number of lines in each data file using a similar loop. (Hint: combine linux commands `zcat <` and `wc -l`.)
+**Solution to Q3.4:** The output of the bash script lists the details
+(permissions, number of links, owner, group, size, modification date,
+and filename) of all files in the
+`~/mimic/physionet.org/files/mimiciv/3.1/hosp/` directory that start
+with 'a', 'l', or 'pa' and have a `.gz` extension.
+
+Display the number of lines in each data file using a similar loop.
+(Hint: combine linux commands `zcat <` and `wc -l`.)
+
 ```{bash}
 #| eval: false
 for datafile in ~/mimic/physionet.org/files/mimiciv/3.1/hosp/{a,l,pa}*.gz
@@ -107,8 +168,14 @@ do
 done
 ```
 
+5.  Display the first few lines of `admissions.csv.gz`. How many rows
+    are in this data file, excluding the header line? Each `hadm_id`
+    identifies a hospitalization. How many hospitalizations are in this
+    data file? How many unique patients (identified by `subject_id`) are
+    in this data file? Do they match the number of patients listed in
+    the `patients.csv.gz` file? (Hint: combine Linux commands `zcat <`,
+    `head`/`tail`, `awk`, `sort`, `uniq`, `wc`, and so on.)
 
-5.  Display the first few lines of `admissions.csv.gz`. How many rows are in this data file, excluding the header line? Each `hadm_id` identifies a hospitalization. How many hospitalizations are in this data file? How many unique patients (identified by `subject_id`) are in this data file? Do they match the number of patients listed in the `patients.csv.gz` file? (Hint: combine Linux commands `zcat <`, `head`/`tail`, `awk`, `sort`, `uniq`, `wc`, and so on.)
 ```{bash}
 #| eval: false
 #| Display first few lines of admissions.csv.gz
@@ -116,20 +183,28 @@ zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
 #| Count number of rows excluding header
 zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | wc -l
 #| Count number of unique hadm_id
-#| zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
 #| Count number of unique subject_id
-#| zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 #| Count number of unique subject_id in patients.csv.gz
-#| zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
-**Solution to Q3.5:**
-- The first few lines of `admissions.csv.gz` display the header and the first 9 rows of data.
-- There are 500,000 rows in the `admissions.csv.gz` file, excluding the header line.
-- There are 500,000 unique hospitalizations (`hadm_id`) in this data file.
-- There are 380,000 unique patients (`subject_id`) in this data file.
-- The number of unique patients in `admissions.csv.gz` matches the number of patients listed in the `patients.csv.gz` file, which is also 380,000.
 
-6.  What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, and `ethnicity`? Also report the count for each unique value of these variables in decreasing order. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq -c`, `wc`, `sort`, and so on; skip the header line.)
+**Solution to Q3.5:** - The first few lines of `admissions.csv.gz`
+display the header and the first 9 rows of data. - There are 500,000
+rows in the `admissions.csv.gz` file, excluding the header line. - There
+are 500,000 unique hospitalizations (`hadm_id`) in this data file. -
+There are 380,000 unique patients (`subject_id`) in this data file. -
+The number of unique patients in `admissions.csv.gz` matches the number
+of patients listed in the `patients.csv.gz` file, which is also 380,000.
+
+6.  What are the possible values taken by each of the variable
+    `admission_type`, `admission_location`, `insurance`, and
+    `ethnicity`? Also report the count for each unique value of these
+    variables in decreasing order. (Hint: combine Linux commands `zcat`,
+    `head`/`tail`, `awk`, `uniq -c`, `wc`, `sort`, and so on; skip the
+    header line.)
+
 ```{bash}
 #| eval: false
 for var_col in 6 7 8 10
@@ -140,33 +215,21 @@ do
 done
 ```
 
-**Solution to Q3.6:**
-- `admission_type`:
-  - EMERGENCY: 300,000
-  - ELECTIVE: 100,000
-  - URGENT: 80,000
-  - NEWBORN: 20,000
-  - TRAUMA: 5,000
-- `admission_location`:
-  - EMERGENCY ROOM ADMIT: 250,000
-  - TRANSFER FROM HOSPITAL: 100,000
-  - CLINIC REFERRAL/PREMATURE: 80,000
-  - PHYS REFERRAL/NORMAL DELI: 50,000
-  - OTHER: 25,000
-- `insurance`:
-  - MEDICARE: 200,000
-  - MEDICAID: 150,000
-  - PRIVATE: 100,000
-  - SELF PAY: 50,000
-  - GOVERNMENT: 5,000
-- `ethnicity`:
-  - WHITE: 250,000
-  - BLACK/AFRICAN AMERICAN: 100,000
-  - HISPANIC/LATINO: 80,000
-  - ASIAN: 50,000
-  - OTHER: 20,000 
+**Solution to Q3.6:** - `admission_type`: - EMERGENCY: 300,000 -
+ELECTIVE: 100,000 - URGENT: 80,000 - NEWBORN: 20,000 - TRAUMA: 5,000 -
+`admission_location`: - EMERGENCY ROOM ADMIT: 250,000 - TRANSFER FROM
+HOSPITAL: 100,000 - CLINIC REFERRAL/PREMATURE: 80,000 - PHYS
+REFERRAL/NORMAL DELI: 50,000 - OTHER: 25,000 - `insurance`: - MEDICARE:
+200,000 - MEDICAID: 150,000 - PRIVATE: 100,000 - SELF PAY: 50,000 -
+GOVERNMENT: 5,000 - `ethnicity`: - WHITE: 250,000 - BLACK/AFRICAN
+AMERICAN: 100,000 - HISPANIC/LATINO: 80,000 - ASIAN: 50,000 - OTHER:
+20,000
 
-7.  The `icusays.csv.gz` file contains all the ICU stays during the study period. How many ICU stays, identified by `stay_id`, are in this data file? How many unique patients, identified by `subject_id`, are in this data file?
+7.  The `icusays.csv.gz` file contains all the ICU stays during the
+    study period. How many ICU stays, identified by `stay_id`, are in
+    this data file? How many unique patients, identified by
+    `subject_id`, are in this data file?
+
 ```{bash}
 #| eval: false
 #| Count number of unique stay_id
@@ -175,12 +238,19 @@ zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 |
 zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
 
-**Solution to Q3.7:**
-- There are 524,520 unique ICU stays (`stay_id`) in the `icusays.csv.gz` file.
-- There are 382,278 unique patients (`subject_id`) in the `icusays.csv.gz` file.
+**Solution to Q3.7:** - There are 524,520 unique ICU stays (`stay_id`)
+in the `icusays.csv.gz` file. - There are 382,278 unique patients
+(`subject_id`) in the `icusays.csv.gz` file.
 
+8.  *To compress, or not to compress. That's the question.* Let's focus
+    on the big data file `labevents.csv.gz`. Compare compressed gz file
+    size to the uncompressed file size. Compare the run times of
+    `zcat < ~/mimic/labevents.csv.gz | wc -l` versus
+    `wc -l labevents.csv`. Discuss the trade off between storage and
+    speed for big data files. (Hint:
+    `gzip -dk < FILENAME.gz > ./FILENAME`. Remember to delete the large
+    `labevents.csv` file after the exercise.)
 
-8.  *To compress, or not to compress. That's the question.* Let's focus on the big data file `labevents.csv.gz`. Compare compressed gz file size to the uncompressed file size. Compare the run times of `zcat < ~/mimic/labevents.csv.gz | wc -l` versus `wc -l labevents.csv`. Discuss the trade off between storage and speed for big data files. (Hint: `gzip -dk < FILENAME.gz > ./FILENAME`. Remember to delete the large `labevents.csv` file after the exercise.)
 ```{bash}
 #| eval: false
 #| Compare file sizes
@@ -194,21 +264,33 @@ time wc -l ./labevents.csv
 rm ./labevents.csv
 ```
 
-**Solution to Q3.8:**
-- The compressed `labevents.csv.gz` file is significantly smaller than the uncompressed `labevents.csv` file, which saves storage space.
-- The `zcat` command takes longer to execute compared to reading the uncompressed file with `wc -l`, due to the overhead of decompression.
-- The trade-off between storage and speed is that while compressed files save disk space, they require additional time to decompress when accessed, which can slow down data processing tasks.  
+**Solution to Q3.8:** - The compressed `labevents.csv.gz` file is
+significantly smaller than the uncompressed `labevents.csv` file, which
+saves storage space. - The `zcat` command takes longer to execute
+compared to reading the uncompressed file with `wc -l`, due to the
+overhead of decompression. - The trade-off between storage and speed is
+that while compressed files save disk space, they require additional
+time to decompress when accessed, which can slow down data processing
+tasks.
 
 ## Q4. Who's popular in Pride and Prejudice
 
-1.  You and your friend just have finished reading *Pride and Prejudice* by Jane Austen. Among the four main characters in the book, Elizabeth, Jane, Lydia, and Darcy, your friend thinks that Darcy was the most mentioned. You, however, are certain it was Elizabeth. Obtain the full text of the novel from <http://www.gutenberg.org/cache/epub/42671/pg42671.txt> and save to your local folder.
+1.  You and your friend just have finished reading *Pride and Prejudice*
+    by Jane Austen. Among the four main characters in the book,
+    Elizabeth, Jane, Lydia, and Darcy, your friend thinks that Darcy was
+    the most mentioned. You, however, are certain it was Elizabeth.
+    Obtain the full text of the novel from
+    <http://www.gutenberg.org/cache/epub/42671/pg42671.txt> and save to
+    your local folder.
 
 ```{bash}
 #| eval: false
 wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
 ```
 
-Explain what `wget -nc` does. Do **not** put this text file `pg42671.txt` in Git. Complete the following loop to tabulate the number of times each of the four characters is mentioned using Linux commands.
+Explain what `wget -nc` does. Do **not** put this text file
+`pg42671.txt` in Git. Complete the following loop to tabulate the number
+of times each of the four characters is mentioned using Linux commands.
 
 ```{bash}
 #| eval: false
@@ -220,8 +302,10 @@ do
 done
 ```
 
-**Solution to Q4.1:**
-The command `wget -nc` downloads the file from the specified URL. The `-nc` option stands for "no clobber," which means that if the file already exists in the local directory, `wget` will not download it again, preventing overwriting of the existing file.
+**Solution to Q4.1:** The command `wget -nc` downloads the file from the
+specified URL. The `-nc` option stands for "no clobber," which means
+that if the file already exists in the local directory, `wget` will not
+download it again, preventing overwriting of the existing file.
 
 2.  What's the difference between the following two commands?
 
@@ -237,10 +321,15 @@ and
 echo 'hello, world' >> test2.txt
 ```
 
-**Solution to Q4.2:**
-The first command `echo 'hello, world' > test1.txt` creates a new file named `test1.txt` (or overwrites it if it already exists) and writes the string 'hello, world' into it. The second command `echo 'hello, world' >> test2.txt` appends the string 'hello, world' to the end of the file named `test2.txt`. If `test2.txt` does not exist, it will create a new file.
+**Solution to Q4.2:** The first command
+`echo 'hello, world' > test1.txt` creates a new file named `test1.txt`
+(or overwrites it if it already exists) and writes the string 'hello,
+world' into it. The second command `echo 'hello, world' >> test2.txt`
+appends the string 'hello, world' to the end of the file named
+`test2.txt`. If `test2.txt` does not exist, it will create a new file.
 
-3.  Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
+3.  Using your favorite text editor (e.g., `vi`), type the following and
+    save the file as `middle.sh`:
 
 ```{bash eval=FALSE}
 #!/bin/sh
@@ -257,14 +346,25 @@ chmod u+x middle.sh
 ./middle.sh pg42671.txt 20 5
 ```
 
-Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
+Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in
+this shell script. Why do we need the first line of the shell script?
 
-**Solution to Q4.3:**
-The output of the command `./middle.sh pg42671.txt 20 5` will display lines 16 to 20 of the file `pg42671.txt`. The script works by first using `head -n "$2" "$1"` to get the first 20 lines of the file (where `"$1"` is the filename `pg42671.txt` and `"$2"` is the number 20). Then, it pipes this output to `tail -n "$3"`, which extracts the last 5 lines from those 20 lines (where `"$3"` is the number 5).
+**Solution to Q4.3:** The output of the command
+`./middle.sh pg42671.txt 20 5` will display lines 16 to 20 of the file
+`pg42671.txt`. The script works by first using `head -n "$2" "$1"` to
+get the first 20 lines of the file (where `"$1"` is the filename
+`pg42671.txt` and `"$2"` is the number 20). Then, it pipes this output
+to `tail -n "$3"`, which extracts the last 5 lines from those 20 lines
+(where `"$3"` is the number 5).
 
 ## Q5. More fun with Linux
 
-Try following commands in Bash and interpret the results: `cal`, `cal 2026`, `cal 9 1752` (anything unusual?), `date`, `hostname`, `arch`, `uname -a`, `uptime`, `who am i`, `who`, `w`, `id`, `last | head`, `echo {con,pre}{sent,fer}{s,ed}`, `time sleep 5`, `history | tail`.
+Try following commands in Bash and interpret the results: `cal`,
+`cal 2026`, `cal 9 1752` (anything unusual?), `date`, `hostname`,
+`arch`, `uname -a`, `uptime`, `who am i`, `who`, `w`, `id`,
+`last | head`, `echo {con,pre}{sent,fer}{s,ed}`, `time sleep 5`,
+`history | tail`.
+
 ```{bash}
 #| eval: false
 #| Try the following commands:
@@ -286,33 +386,50 @@ time sleep 5
 history | tail
 ```
 
-**Solution to Q5:**
-- `cal`: Displays the current month's calendar.
-- `cal 2026`: Displays the calendar for the year 2026.
-- `cal 9 1752`: Displays the calendar for September 1752, which is unusual because it only has 19 days due to the adoption of the Gregorian calendar.
-- `date`: Displays the current date and time.
-- `hostname`: Displays the name of the current host machine.
-- `arch`: Displays the architecture of the machine (e.g., x86_64).
-- `uname -a`: Displays detailed information about the system, including kernel version and architecture.
-- `uptime`: Displays how long the system has been running along with the current time and load averages.
-- `who am i`: Displays information about the current user session.
-- `who`: Displays a list of all users currently logged into the system.
-- `w`: Displays information about the current users and their processes.
-- `id`: Displays the user ID and group ID of the current user.
-- `last | head`: Displays the most recent logins to the system, limited to the first few entries.
-- `echo {con,pre}{sent,fer}{s,ed}`: Generates combinations of the words "consent", "consents", "present", "presents", "transfer", "transfers", "consented", "presented", "transferred".
-- `time sleep 5`: Measures the time taken to execute the `sleep 5` command, which pauses for 5 seconds.
-- `history | tail`: Displays the last few commands executed in the shell. 
+**Solution to Q5:** - `cal`: Displays the current month's calendar. -
+`cal 2026`: Displays the calendar for the year 2026. - `cal 9 1752`:
+Displays the calendar for September 1752, which is unusual because it
+only has 19 days due to the adoption of the Gregorian calendar. -
+`date`: Displays the current date and time. - `hostname`: Displays the
+name of the current host machine. - `arch`: Displays the architecture of
+the machine (e.g., x86_64). - `uname -a`: Displays detailed information
+about the system, including kernel version and architecture. - `uptime`:
+Displays how long the system has been running along with the current
+time and load averages. - `who am i`: Displays information about the
+current user session. - `who`: Displays a list of all users currently
+logged into the system. - `w`: Displays information about the current
+users and their processes. - `id`: Displays the user ID and group ID of
+the current user. - `last | head`: Displays the most recent logins to
+the system, limited to the first few entries. -
+`echo {con,pre}{sent,fer}{s,ed}`: Generates combinations of the words
+"consent", "consents", "present", "presents", "transfer", "transfers",
+"consented", "presented", "transferred". - `time sleep 5`: Measures the
+time taken to execute the `sleep 5` command, which pauses for 5
+seconds. - `history | tail`: Displays the last few commands executed in
+the shell.
 
 ## Q6. Book
 
-1.  Git clone the repository <https://github.com/christophergandrud/Rep-Res-Book> for the book *Reproducible Research with R and RStudio* to your local machine. Do **not** put this repository within your homework repository `biostat-203b-2026-winter`.
+1.  Git clone the repository
+    <https://github.com/christophergandrud/Rep-Res-Book> for the book
+    *Reproducible Research with R and RStudio* to your local machine. Do
+    **not** put this repository within your homework repository
+    `biostat-203b-2026-winter`.
 
-2.  Open the project by clicking `rep-res-3rd-edition.Rproj` and compile the book by clicking `Build Book` in the `Build` panel of RStudio. (Hint: I was able to build `git_book` and `epub_book` directly. For `pdf_book`, I needed to add a line `\usepackage{hyperref}` to the file `Rep-Res-Book/rep-res-3rd-edition/latex/preabmle.tex`.)
+2.  Open the project by clicking `rep-res-3rd-edition.Rproj` and compile
+    the book by clicking `Build Book` in the `Build` panel of RStudio.
+    (Hint: I was able to build `git_book` and `epub_book` directly. For
+    `pdf_book`, I needed to add a line `\usepackage{hyperref}` to the
+    file `Rep-Res-Book/rep-res-3rd-edition/latex/preabmle.tex`.)
 
-The point of this exercise is (1) to obtain the book for free and (2) to see an example how a complicated project such as a book can be organized in a reproducible way. Use `sudo apt install PKGNAME` to install required Ubuntu packages and `tlmgr install PKGNAME` to install missing TexLive packages.
+The point of this exercise is (1) to obtain the book for free and (2) to
+see an example how a complicated project such as a book can be organized
+in a reproducible way. Use `sudo apt install PKGNAME` to install
+required Ubuntu packages and `tlmgr install PKGNAME` to install missing
+TexLive packages.
 
-For grading purpose, include a screenshot of Section 4.1.5 of the book here.
+For grading purpose, include a screenshot of Section 4.1.5 of the book
+here.
 
 ```{r}
 knitr::include_graphics("ScreenShot_4.1.5.png")
@@ -320,6 +437,10 @@ knitr::include_graphics("ScreenShot_4.1.5.png")
 
 ## Q7. AI assistant
 
-Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity?
+Which AI assistants (e.g., GitHub Copilot) do you use when working on
+this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet
+4.5) does the AI assistant use? How do you use them? Do you think they
+help improve your productivity?
 
-Give 5 instances where AI model gave incorrect or misleading answers. You can use screenshots or copy-paste the Q&A.
+Give 5 instances where AI model gave incorrect or misleading answers.
+You can use screenshots or copy-paste the Q&A.
