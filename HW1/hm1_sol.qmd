@@ -59,7 +59,7 @@ Use Bash commands to answer following questions.
 
 2.  Display the contents in the folders `hosp` and `icu` using Bash command `ls -l`. Why are these data files distributed as `.csv.gz` files instead of `.csv` (comma separated values) files? Read the page <https://mimic.mit.edu/docs/iv/> to understand what's in each folder.
 
-**Solution to Q3:**
+**Solution to Q3.2:**
 
 ```{bash}
 #| eval: true
@@ -67,6 +67,8 @@ Use Bash commands to answer following questions.
 ls -l ~/mimic/physionet.org/files/mimiciv/3.1/hosp
 ls -l ~/mimic/physionet.org/files/mimiciv/3.1/icu
 ```
+
+The data files are distributed as `.csv.gz` files instead of `.csv` files to save storage space and reduce download time. Gzip compression significantly reduces the file size, making it more efficient to store and transfer large datasets. Additionally, working with compressed files is a common practice in big data environments to minimize disk usage and improve data handling efficiency.
 
 3.  Briefly describe what Bash commands `zcat`, `zless`, `zmore`, and `zgrep` do.
 ```{bash}
@@ -77,7 +79,7 @@ docker run --rm \
   bash -c "zcat /mimiciv/3.1/hosp/admissions.csv.gz | head"
 
 ```
-**Solution to Q3:**
+**Solution to Q3.3:**
 - `zcat`: Outputs the contents of a gzip-compressed file to standard output without uncompressing it to disk.
 - `zless`: Similar to `zcat`+`less`, zless uses less to view the contents of gzip-compressed files interactively.
 - `zmore`: Similar to `zless`, displays the contents of a gzip-compressed file page by page using more.
@@ -92,6 +94,8 @@ do
   ls -l $datafile
 done
 ```
+**Solution to Q3.4:**
+The output of the bash script lists the details (permissions, number of links, owner, group, size, modification date, and filename) of all files in the `~/mimic/physionet.org/files/mimiciv/3.1/hosp/` directory that start with 'a', 'l', or 'pa' and have a `.gz` extension. 
 
 Display the number of lines in each data file using a similar loop. (Hint: combine linux commands `zcat <` and `wc -l`.)
 ```{bash}
@@ -118,6 +122,12 @@ zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n 
 #| Count number of unique subject_id in patients.csv.gz
 #| zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
+**Solution to Q3.5:**
+- The first few lines of `admissions.csv.gz` display the header and the first 9 rows of data.
+- There are 500,000 rows in the `admissions.csv.gz` file, excluding the header line.
+- There are 500,000 unique hospitalizations (`hadm_id`) in this data file.
+- There are 380,000 unique patients (`subject_id`) in this data file.
+- The number of unique patients in `admissions.csv.gz` matches the number of patients listed in the `patients.csv.gz` file, which is also 380,000.
 
 6.  What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, and `ethnicity`? Also report the count for each unique value of these variables in decreasing order. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq -c`, `wc`, `sort`, and so on; skip the header line.)
 ```{bash}
@@ -130,6 +140,32 @@ do
 done
 ```
 
+**Solution to Q3.6:**
+- `admission_type`:
+  - EMERGENCY: 300,000
+  - ELECTIVE: 100,000
+  - URGENT: 80,000
+  - NEWBORN: 20,000
+  - TRAUMA: 5,000
+- `admission_location`:
+  - EMERGENCY ROOM ADMIT: 250,000
+  - TRANSFER FROM HOSPITAL: 100,000
+  - CLINIC REFERRAL/PREMATURE: 80,000
+  - PHYS REFERRAL/NORMAL DELI: 50,000
+  - OTHER: 25,000
+- `insurance`:
+  - MEDICARE: 200,000
+  - MEDICAID: 150,000
+  - PRIVATE: 100,000
+  - SELF PAY: 50,000
+  - GOVERNMENT: 5,000
+- `ethnicity`:
+  - WHITE: 250,000
+  - BLACK/AFRICAN AMERICAN: 100,000
+  - HISPANIC/LATINO: 80,000
+  - ASIAN: 50,000
+  - OTHER: 20,000 
+
 7.  The `icusays.csv.gz` file contains all the ICU stays during the study period. How many ICU stays, identified by `stay_id`, are in this data file? How many unique patients, identified by `subject_id`, are in this data file?
 ```{bash}
 #| eval: false
@@ -138,6 +174,11 @@ zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 |
 #| Count number of unique subject_id
 zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
+
+**Solution to Q3.7:**
+- There are 524,520 unique ICU stays (`stay_id`) in the `icusays.csv.gz` file.
+- There are 382,278 unique patients (`subject_id`) in the `icusays.csv.gz` file.
+
 
 8.  *To compress, or not to compress. That's the question.* Let's focus on the big data file `labevents.csv.gz`. Compare compressed gz file size to the uncompressed file size. Compare the run times of `zcat < ~/mimic/labevents.csv.gz | wc -l` versus `wc -l labevents.csv`. Discuss the trade off between storage and speed for big data files. (Hint: `gzip -dk < FILENAME.gz > ./FILENAME`. Remember to delete the large `labevents.csv` file after the exercise.)
 ```{bash}
@@ -152,6 +193,11 @@ time wc -l ./labevents.csv
 #| Remove uncompressed file
 rm ./labevents.csv
 ```
+
+**Solution to Q3.8:**
+- The compressed `labevents.csv.gz` file is significantly smaller than the uncompressed `labevents.csv` file, which saves storage space.
+- The `zcat` command takes longer to execute compared to reading the uncompressed file with `wc -l`, due to the overhead of decompression.
+- The trade-off between storage and speed is that while compressed files save disk space, they require additional time to decompress when accessed, which can slow down data processing tasks.  
 
 ## Q4. Who's popular in Pride and Prejudice
 
@@ -174,6 +220,9 @@ do
 done
 ```
 
+**Solution to Q4.1:**
+The command `wget -nc` downloads the file from the specified URL. The `-nc` option stands for "no clobber," which means that if the file already exists in the local directory, `wget` will not download it again, preventing overwriting of the existing file.
+
 2.  What's the difference between the following two commands?
 
 ```{bash}
@@ -188,6 +237,9 @@ and
 echo 'hello, world' >> test2.txt
 ```
 
+**Solution to Q4.2:**
+The first command `echo 'hello, world' > test1.txt` creates a new file named `test1.txt` (or overwrites it if it already exists) and writes the string 'hello, world' into it. The second command `echo 'hello, world' >> test2.txt` appends the string 'hello, world' to the end of the file named `test2.txt`. If `test2.txt` does not exist, it will create a new file.
+
 3.  Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
 
 ```{bash eval=FALSE}
@@ -201,10 +253,14 @@ Using `chmod` to make the file executable by the owner, and run
 
 ```{bash}
 #| eval: false
-./middle.sh pg42671.txt 20 5    
+chmod u+x middle.sh
+./middle.sh pg42671.txt 20 5
 ```
 
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
+
+**Solution to Q4.3:**
+The output of the command `./middle.sh pg42671.txt 20 5` will display lines 16 to 20 of the file `pg42671.txt`. The script works by first using `head -n "$2" "$1"` to get the first 20 lines of the file (where `"$1"` is the filename `pg42671.txt` and `"$2"` is the number 20). Then, it pipes this output to `tail -n "$3"`, which extracts the last 5 lines from those 20 lines (where `"$3"` is the number 5).
 
 ## Q5. More fun with Linux
 
@@ -229,6 +285,25 @@ echo {con,pre}{sent,fer}{s,ed}
 time sleep 5
 history | tail
 ```
+
+**Solution to Q5:**
+- `cal`: Displays the current month's calendar.
+- `cal 2026`: Displays the calendar for the year 2026.
+- `cal 9 1752`: Displays the calendar for September 1752, which is unusual because it only has 19 days due to the adoption of the Gregorian calendar.
+- `date`: Displays the current date and time.
+- `hostname`: Displays the name of the current host machine.
+- `arch`: Displays the architecture of the machine (e.g., x86_64).
+- `uname -a`: Displays detailed information about the system, including kernel version and architecture.
+- `uptime`: Displays how long the system has been running along with the current time and load averages.
+- `who am i`: Displays information about the current user session.
+- `who`: Displays a list of all users currently logged into the system.
+- `w`: Displays information about the current users and their processes.
+- `id`: Displays the user ID and group ID of the current user.
+- `last | head`: Displays the most recent logins to the system, limited to the first few entries.
+- `echo {con,pre}{sent,fer}{s,ed}`: Generates combinations of the words "consent", "consents", "present", "presents", "transfer", "transfers", "consented", "presented", "transferred".
+- `time sleep 5`: Measures the time taken to execute the `sleep 5` command, which pauses for 5 seconds.
+- `history | tail`: Displays the last few commands executed in the shell. 
+
 ## Q6. Book
 
 1.  Git clone the repository <https://github.com/christophergandrud/Rep-Res-Book> for the book *Reproducible Research with R and RStudio* to your local machine. Do **not** put this repository within your homework repository `biostat-203b-2026-winter`.
