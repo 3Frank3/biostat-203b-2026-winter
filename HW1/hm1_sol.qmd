@@ -170,7 +170,7 @@ wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
 for char in Elizabeth Jane Lydia Darcy
 do
   echo $char:
-  zcat < pg42671.txt | grep -o -i $char | wc -l
+  grep -o -i "$char" pg42671.txt | wc -l
 done
 ```
 
