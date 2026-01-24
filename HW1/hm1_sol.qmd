@@ -120,10 +120,38 @@ zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n 
 ```
 
 6.  What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, and `ethnicity`? Also report the count for each unique value of these variables in decreasing order. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq -c`, `wc`, `sort`, and so on; skip the header line.)
+```{bash}
+#| eval: false
+for var_col in 6 7 8 10
+do
+  echo "Variable column $var_col:"
+  zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, "{print \$$var_col}" | sort | uniq -c | sort -nr
+  echo ""
+done
+```
 
 7.  The `icusays.csv.gz` file contains all the ICU stays during the study period. How many ICU stays, identified by `stay_id`, are in this data file? How many unique patients, identified by `subject_id`, are in this data file?
+```{bash}
+#| eval: false
+#| Count number of unique stay_id
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+#| Count number of unique subject_id
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+```
 
 8.  *To compress, or not to compress. That's the question.* Let's focus on the big data file `labevents.csv.gz`. Compare compressed gz file size to the uncompressed file size. Compare the run times of `zcat < ~/mimic/labevents.csv.gz | wc -l` versus `wc -l labevents.csv`. Discuss the trade off between storage and speed for big data files. (Hint: `gzip -dk < FILENAME.gz > ./FILENAME`. Remember to delete the large `labevents.csv` file after the exercise.)
+```{bash}
+#| eval: false
+#| Compare file sizes
+ls -lh ~/mimic/physionet.org/files/mimiciv/3.1/hosp/labevents.csv.gz
+gzip -dk < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/labevents.csv.gz > ./labevents.csv
+ls -lh ./labevents.csv
+#| Compare run times
+time zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/labevents.csv.gz | wc -l
+time wc -l ./labevents.csv
+#| Remove uncompressed file
+rm ./labevents.csv
+```
 
 ## Q4. Who's popular in Pride and Prejudice
 
@@ -173,7 +201,7 @@ Using `chmod` to make the file executable by the owner, and run
 
 ```{bash}
 #| eval: false
-./middle.sh pg42671.txt 20 5
+./middle.sh pg42671.txt 20 5    
 ```
 
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
