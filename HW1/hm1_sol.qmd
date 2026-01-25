@@ -85,7 +85,7 @@ Commands
 ```{bash}
 #| eval: true
 # content of mimic folder
-ls -l ~/mimic/Sphysionet.org/files/mimiciv/3.1
+ls -l ~/mimic/physionet.org/files/mimiciv/3.1
 
 ```
 
@@ -124,20 +124,22 @@ improve data handling efficiency.
     `zgrep` do.
 
 ```{bash}
-#| eval: true
-docker run --rm \
-  -v "/Users/xuzhiwei/Library/CloudStorage/OneDrive-UCLAITServices/mimic/physionet.org/files/mimiciv:/mimiciv:ro" \
-  ubuntu \
-  bash -c "zcat /mimiciv/3.1/hosp/admissions.csv.gz | head"
-
+#| eval: false
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
+#zless /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz
+#zmore /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz
+#zgrep "EMERGENCY" /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head
 ```
 
-**Solution to Q3.3:** - `zcat`: Outputs the contents of a
+**Solution to Q3.3:** 
+- `zcat`: Outputs the contents of a
 gzip-compressed file to standard output without uncompressing it to
-disk. - `zless`: Similar to `zcat`+`less`, zless uses less to view the
-contents of gzip-compressed files interactively. - `zmore`: Similar to
-`zless`, displays the contents of a gzip-compressed file page by page
-using more. - `zgrep`: Displays the contents of a gzip-compressed file
+disk. 
+- `zless`: Similar to `zcat`+`less`, zless uses less to view the
+contents of gzip-compressed files interactively. 
+- `zmore`: Similar to`zless`, displays the contents of a gzip-compressed file page by page
+using more. 
+- `zgrep`: Displays the contents of a gzip-compressed file
 page by page using more.
 
 4.  (Looping in Bash) What's the output of the following bash script?
@@ -179,15 +181,15 @@ done
 ```{bash}
 #| eval: false
 #| Display first few lines of admissions.csv.gz
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
 #| Count number of rows excluding header
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | wc -l
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | wc -l
 #| Count number of unique hadm_id
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
 #| Count number of unique subject_id
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 #| Count number of unique subject_id in patients.csv.gz
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | wc -l
 ```
 
 **Solution to Q3.5:** - The first few lines of `admissions.csv.gz`
@@ -206,11 +208,17 @@ of patients listed in the `patients.csv.gz` file, which is also 380,000.
     header line.)
 
 ```{bash}
-#| eval: false
+#| eval: True
 for var_col in 6 7 8 10
 do
-  echo "Variable column $var_col:"
-  zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, "{print \$$var_col}" | sort | uniq -c | sort -nr
+  echo "Variable column $var_col (top 20):"
+  zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz \
+    | tail -n +2 \
+    | awk -F, -v c="$var_col" '{print $c}' \
+    | sort \
+    | uniq -c \
+    | sort -nr \
+    | head -n 20
   echo ""
 done
 ```
@@ -233,9 +241,9 @@ AMERICAN: 100,000 - HISPANIC/LATINO: 80,000 - ASIAN: 50,000 - OTHER:
 ```{bash}
 #| eval: false
 #| Count number of unique stay_id
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
 #| Count number of unique subject_id
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icusays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
 
 **Solution to Q3.7:** - There are 524,520 unique ICU stays (`stay_id`)
