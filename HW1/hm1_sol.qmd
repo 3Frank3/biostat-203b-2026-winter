@@ -180,15 +180,15 @@ done
 
 ```{bash}
 #| eval: false
-#| Display first few lines of admissions.csv.gz
+# Display first few lines of admissions.csv.gz
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
-#| Count number of rows excluding header
+# Count number of rows excluding header
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | wc -l
-#| Count number of unique hadm_id
+# Count number of unique hadm_id
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
-#| Count number of unique subject_id
+# Count number of unique subject_id
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
-#| Count number of unique subject_id in patients.csv.gz
+# Count number of unique subject_id in patients.csv.gz
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | wc -l
 ```
 
@@ -240,9 +240,9 @@ AMERICAN: 100,000 - HISPANIC/LATINO: 80,000 - ASIAN: 50,000 - OTHER:
 
 ```{bash}
 #| eval: false
-#| Count number of unique stay_id
+# Count number of unique stay_id
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
-#| Count number of unique subject_id
+# Count number of unique subject_id
 zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
 
@@ -261,14 +261,14 @@ in the `icusays.csv.gz` file. - There are 382,278 unique patients
 
 ```{bash}
 #| eval: false
-#| Compare file sizes
+# Compare file sizes
 ls -lh ~/mimic/physionet.org/files/mimiciv/3.1/hosp/labevents.csv.gz
 gzip -dk < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/labevents.csv.gz > ./labevents.csv
 ls -lh ./labevents.csv
-#| Compare run times
+# Compare run times
 time zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/labevents.csv.gz | wc -l
 time wc -l ./labevents.csv
-#| Remove uncompressed file
+# Remove uncompressed file
 rm ./labevents.csv
 ```
 
@@ -375,7 +375,7 @@ Try following commands in Bash and interpret the results: `cal`,
 
 ```{bash}
 #| eval: false
-#| Try the following commands:
+# Try the following commands:
 cal
 cal 2026
 cal 9 1752
@@ -440,6 +440,7 @@ For grading purpose, include a screenshot of Section 4.1.5 of the book
 here.
 
 ```{r}
+#| eval: true
 knitr::include_graphics("ScreenShot_4.1.5.png")
 ```
 
