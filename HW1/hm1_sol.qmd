@@ -85,8 +85,9 @@ Commands
 ```{bash}
 #| eval: true
 # content of mimic folder
-ls -l ~/mimic/physionet.org/files/mimiciv/3.1
-
+rm -rf ~/mimic
+ls -l /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1
+ln -s /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic ~/mimic
 ```
 
 Refer to the documentation <https://physionet.org/content/mimiciv/3.1/>
@@ -125,21 +126,15 @@ improve data handling efficiency.
 
 ```{bash}
 #| eval: false
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
-#zless /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz
-#zmore /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz
-#zgrep "EMERGENCY" /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
 ```
 
-**Solution to Q3.3:** 
-- `zcat`: Outputs the contents of a
+**Solution to Q3.3:** - `zcat`: Outputs the contents of a
 gzip-compressed file to standard output without uncompressing it to
-disk. 
-- `zless`: Similar to `zcat`+`less`, zless uses less to view the
-contents of gzip-compressed files interactively. 
-- `zmore`: Similar to`zless`, displays the contents of a gzip-compressed file page by page
-using more. 
-- `zgrep`: Displays the contents of a gzip-compressed file
+disk. - `zless`: Similar to `zcat`+`less`, zless uses less to view the
+contents of gzip-compressed files interactively. - `zmore`: Similar
+to`zless`, displays the contents of a gzip-compressed file page by page
+using more. - `zgrep`: Displays the contents of a gzip-compressed file
 page by page using more.
 
 4.  (Looping in Bash) What's the output of the following bash script?
@@ -181,24 +176,23 @@ done
 ```{bash}
 #| eval: false
 # Display first few lines of admissions.csv.gz
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
 # Count number of rows excluding header
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | wc -l
 # Count number of unique hadm_id
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
 # Count number of unique subject_id
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 # Count number of unique subject_id in patients.csv.gz
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
 
-**Solution to Q3.5:** - The first few lines of `admissions.csv.gz`
-display the header and the first 9 rows of data. - There are 500,000
-rows in the `admissions.csv.gz` file, excluding the header line. - There
-are 500,000 unique hospitalizations (`hadm_id`) in this data file. -
-There are 380,000 unique patients (`subject_id`) in this data file. -
-The number of unique patients in `admissions.csv.gz` matches the number
-of patients listed in the `patients.csv.gz` file, which is also 380,000.
+**Solution to Q3.5:** - There are 546028 rows in the `admissions.csv.gz`
+file, excluding the header line. - There are 546028 unique
+hospitalizations (`hadm_id`) in this data file. - There are 223452
+unique patients (`subject_id`) in this data file. -The number of unique
+patients in `admissions.csv.gz` doesn't matches the number of patients
+listed in the `patients.csv.gz` file, which is 364627.
 
 6.  What are the possible values taken by each of the variable
     `admission_type`, `admission_location`, `insurance`, and
@@ -209,7 +203,7 @@ of patients listed in the `patients.csv.gz` file, which is also 380,000.
 
 ```{bash}
 #| eval: True
-for var_col in 6 7 8 10
+for var_col in 6 8 10 13
 do
   echo "Variable column $var_col (top 20):"
   zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz \
@@ -223,16 +217,6 @@ do
 done
 ```
 
-**Solution to Q3.6:** - `admission_type`: - EMERGENCY: 300,000 -
-ELECTIVE: 100,000 - URGENT: 80,000 - NEWBORN: 20,000 - TRAUMA: 5,000 -
-`admission_location`: - EMERGENCY ROOM ADMIT: 250,000 - TRANSFER FROM
-HOSPITAL: 100,000 - CLINIC REFERRAL/PREMATURE: 80,000 - PHYS
-REFERRAL/NORMAL DELI: 50,000 - OTHER: 25,000 - `insurance`: - MEDICARE:
-200,000 - MEDICAID: 150,000 - PRIVATE: 100,000 - SELF PAY: 50,000 -
-GOVERNMENT: 5,000 - `ethnicity`: - WHITE: 250,000 - BLACK/AFRICAN
-AMERICAN: 100,000 - HISPANIC/LATINO: 80,000 - ASIAN: 50,000 - OTHER:
-20,000
-
 7.  The `icusays.csv.gz` file contains all the ICU stays during the
     study period. How many ICU stays, identified by `stay_id`, are in
     this data file? How many unique patients, identified by
@@ -241,14 +225,14 @@ AMERICAN: 100,000 - HISPANIC/LATINO: 80,000 - ASIAN: 50,000 - OTHER:
 ```{bash}
 #| eval: false
 # Count number of unique stay_id
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $3}' | sort | uniq | wc -l
 # Count number of unique subject_id
-zcat < /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < ~/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 ```
 
-**Solution to Q3.7:** - There are 524,520 unique ICU stays (`stay_id`)
-in the `icusays.csv.gz` file. - There are 382,278 unique patients
-(`subject_id`) in the `icusays.csv.gz` file.
+**Solution to Q3.7:** - There are 94458 unique ICU stays (`stay_id`)in
+the `icusays.csv.gz` file. - There are 65366 unique
+patients(`subject_id`) in the `icusays.csv.gz` file.
 
 8.  *To compress, or not to compress. That's the question.* Let's focus
     on the big data file `labevents.csv.gz`. Compare compressed gz file
@@ -329,12 +313,12 @@ and
 echo 'hello, world' >> test2.txt
 ```
 
-**Solution to Q4.2:** The first command
+**Solution to Q4.2:** - The first command
 `echo 'hello, world' > test1.txt` creates a new file named `test1.txt`
-(or overwrites it if it already exists) and writes the string 'hello,
-world' into it. The second command `echo 'hello, world' >> test2.txt`
-appends the string 'hello, world' to the end of the file named
-`test2.txt`. If `test2.txt` does not exist, it will create a new file.
+and writes the string 'hello, world' into it. - The second command
+`echo 'hello, world' >> test2.txt` appends the string 'hello, world' to
+the end of the file named `test2.txt`. If `test2.txt` does not exist, it
+will create a new file.
 
 3.  Using your favorite text editor (e.g., `vi`), type the following and
     save the file as `middle.sh`:
@@ -451,5 +435,19 @@ this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet
 4.5) does the AI assistant use? How do you use them? Do you think they
 help improve your productivity?
 
+**Solution to Q7.1:**
+I used GitHub Copilot, which utilizes the GPT-4 model, while working on this assignment. I primarily used it to generate code snippets, suggest improvements to my existing code. Overall, I found that using GitHub Copilot significantly improved my productivity by speeding up the coding process and providing useful suggestions that enhanced the quality of my work.
+
 Give 5 instances where AI model gave incorrect or misleading answers.
 You can use screenshots or copy-paste the Q&A.
+
+**Solution to Q7.2:**
+1. Sometimes the AI provides Docker commands even though I am not always using Docker, which can be misleading in certain situations.
+
+2. GitHub Copilot often gives incorrect answers. For example, when generating written responses, it sometimes produces incorrect or random numerical values.
+
+3. At the beginning of troubleshooting environment-related issues, I wanted to use Docker to write Linux commands, but the AI was unable to provide correct or appropriate environment setup instructions.
+
+4. The AI often provides answers that are not relevant to the actual question being asked.
+
+5. When I asked for specific code implementations, the AI sometimes generated code that did not align with best practices or was not optimized for performance.
