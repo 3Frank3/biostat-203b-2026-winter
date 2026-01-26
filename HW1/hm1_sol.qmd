@@ -174,7 +174,7 @@ done
     `head`/`tail`, `awk`, `sort`, `uniq`, `wc`, and so on.)
 
 ```{bash}
-#| eval: false
+#| eval: true
 # Display first few lines of admissions.csv.gz
 zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
 # Count number of rows excluding header
