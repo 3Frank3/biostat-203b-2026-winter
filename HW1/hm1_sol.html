@@ -2295,7 +2295,9 @@ loaded via a namespace (and not attached):
 </ol>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># content of mimic folder</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> ~/mimic/physionet.org/files/mimiciv/3.1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> ~/mimic</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic ~/mimic</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>total 56
 -rw-r--r--   1 xuzhiwei  staff  15199 Oct 10  2024 CHANGELOG.txt
@@ -2359,10 +2361,7 @@ total 8506792
 <li>Briefly describe what Bash commands <code>zcat</code>, <code>zless</code>, <code>zmore</code>, and <code>zgrep</code> do.</li>
 </ol>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#zless /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#zmore /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#zgrep &quot;EMERGENCY&quot; /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><strong>Solution to Q3.3:</strong> - <code>zcat</code>: Outputs the contents of a gzip-compressed file to standard output without uncompressing it to disk. - <code>zless</code>: Similar to <code>zcat</code>+<code>less</code>, zless uses less to view the contents of gzip-compressed files interactively. - <code>zmore</code>: Similar to<code>zless</code>, displays the contents of a gzip-compressed file page by page using more. - <code>zgrep</code>: Displays the contents of a gzip-compressed file page by page using more.</p>
 <ol start="4" type="1">
@@ -2388,22 +2387,22 @@ total 8506792
 </ol>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display first few lines of admissions.csv.gz</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of rows excluding header</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of unique hadm_id</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $2}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $2}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of unique subject_id</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of unique subject_id in patients.csv.gz</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/hosp/patients.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><strong>Solution to Q3.5:</strong> - The first few lines of <code>admissions.csv.gz</code> display the header and the first 9 rows of data. - There are 500,000 rows in the <code>admissions.csv.gz</code> file, excluding the header line. - There are 500,000 unique hospitalizations (<code>hadm_id</code>) in this data file. - There are 380,000 unique patients (<code>subject_id</code>) in this data file. - The number of unique patients in <code>admissions.csv.gz</code> matches the number of patients listed in the <code>patients.csv.gz</code> file, which is also 380,000.</p>
+<p><strong>Solution to Q3.5:</strong> - There are 546028 rows in the <code>admissions.csv.gz</code> file, excluding the header line. - There are 546028 unique hospitalizations (<code>hadm_id</code>) in this data file. - There are 223452 unique patients (<code>subject_id</code>) in this data file. -The number of unique patients in <code>admissions.csv.gz</code> doesn’t matches the number of patients listed in the <code>patients.csv.gz</code> file, which is 364627.</p>
 <ol start="6" type="1">
 <li>What are the possible values taken by each of the variable <code>admission_type</code>, <code>admission_location</code>, <code>insurance</code>, and <code>ethnicity</code>? Also report the count for each unique value of these variables in decreasing order. (Hint: combine Linux commands <code>zcat</code>, <code>head</code>/<code>tail</code>, <code>awk</code>, <code>uniq -c</code>, <code>wc</code>, <code>sort</code>, and so on; skip the header line.)</li>
 </ol>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> var_col <span class="kw">in</span> 6 7 8 10</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> var_col <span class="kw">in</span> 6 8 10 13</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;Variable column </span><span class="va">$var_col</span><span class="st"> (top 20):&quot;</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz <span class="dt">\</span></span>
@@ -2427,28 +2426,6 @@ total 8506792
 13130 ELECTIVE
 7195 AMBULATORY OBSERVATION
 
-Variable column 7 (top 20):
-6591 P00HGT
-4712 P32CZ5
-3848 P87IIY
-3510 P595QV
-3464 P55EL5
-3397 P57U5Y
-3285 P13ACE
-3129 P28KC2
-3058 P95A45
-2926 P2004W
-2788 P40LGD
-2769 P60DDG
-2751 P135TN
-2697 P197D0
-2694 P93BYT
-2688 P276OU
-2680 P06OTX
-2644 P20GPE
-2633 P416B5
-2521 P58TE4
-
 Variable column 8 (top 20):
 244179 EMERGENCY ROOM
 163228 PHYSICIAN REFERRAL
@@ -2469,20 +2446,41 @@ Variable column 10 (top 20):
 104229 Medicaid
 14006 Other
 9355 
- 463 No charge</code></pre>
+ 463 No charge
+
+Variable column 13 (top 20):
+336538 WHITE
+75482 BLACK/AFRICAN AMERICAN
+19788 OTHER
+13972 WHITE - OTHER EUROPEAN
+13870 UNKNOWN
+10903 HISPANIC/LATINO - PUERTO RICAN
+8287 HISPANIC OR LATINO
+7809 ASIAN
+7644 ASIAN - CHINESE
+6597 WHITE - RUSSIAN
+6205 BLACK/CAPE VERDEAN
+6070 HISPANIC/LATINO - DOMINICAN
+3875 BLACK/CARIBBEAN ISLAND
+3495 BLACK/AFRICAN
+3478 UNABLE TO OBTAIN
+2162 PATIENT DECLINED TO ANSWER
+2082 PORTUGUESE
+1973 ASIAN - SOUTH EAST ASIAN
+1886 WHITE - EASTERN EUROPEAN
+1858 HISPANIC/LATINO - GUATEMALAN</code></pre>
 </div>
 </div>
-<p><strong>Solution to Q3.6:</strong> - <code>admission_type</code>: - EMERGENCY: 300,000 - ELECTIVE: 100,000 - URGENT: 80,000 - NEWBORN: 20,000 - TRAUMA: 5,000 - <code>admission_location</code>: - EMERGENCY ROOM ADMIT: 250,000 - TRANSFER FROM HOSPITAL: 100,000 - CLINIC REFERRAL/PREMATURE: 80,000 - PHYS REFERRAL/NORMAL DELI: 50,000 - OTHER: 25,000 - <code>insurance</code>: - MEDICARE: 200,000 - MEDICAID: 150,000 - PRIVATE: 100,000 - SELF PAY: 50,000 - GOVERNMENT: 5,000 - <code>ethnicity</code>: - WHITE: 250,000 - BLACK/AFRICAN AMERICAN: 100,000 - HISPANIC/LATINO: 80,000 - ASIAN: 50,000 - OTHER: 20,000</p>
 <ol start="7" type="1">
 <li>The <code>icusays.csv.gz</code> file contains all the ICU stays during the study period. How many ICU stays, identified by <code>stay_id</code>, are in this data file? How many unique patients, identified by <code>subject_id</code>, are in this data file?</li>
 </ol>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of unique stay_id</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $2}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $3}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of unique subject_id</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> /Users/xuzhiwei/Project/UCLA_MDSH_203B/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/physionet.org/files/mimiciv/3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><strong>Solution to Q3.7:</strong> - There are 524,520 unique ICU stays (<code>stay_id</code>) in the <code>icusays.csv.gz</code> file. - There are 382,278 unique patients (<code>subject_id</code>) in the <code>icusays.csv.gz</code> file.</p>
+<p><strong>Solution to Q3.7:</strong> - There are 94458 unique ICU stays (<code>stay_id</code>)in the <code>icusays.csv.gz</code> file. - There are 65366 unique patients(<code>subject_id</code>) in the <code>icusays.csv.gz</code> file.</p>
 <ol start="8" type="1">
 <li><em>To compress, or not to compress. That’s the question.</em> Let’s focus on the big data file <code>labevents.csv.gz</code>. Compare compressed gz file size to the uncompressed file size. Compare the run times of <code>zcat &lt; ~/mimic/labevents.csv.gz | wc -l</code> versus <code>wc -l labevents.csv</code>. Discuss the trade off between storage and speed for big data files. (Hint: <code>gzip -dk &lt; FILENAME.gz &gt; ./FILENAME</code>. Remember to delete the large <code>labevents.csv</code> file after the exercise.)</li>
 </ol>
@@ -2527,7 +2525,7 @@ Variable column 10 (top 20):
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;hello, world&#39;</span> <span class="op">&gt;&gt;</span> test2.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p><strong>Solution to Q4.2:</strong> The first command <code>echo &#39;hello, world&#39; &gt; test1.txt</code> creates a new file named <code>test1.txt</code> (or overwrites it if it already exists) and writes the string ‘hello, world’ into it. The second command <code>echo &#39;hello, world&#39; &gt;&gt; test2.txt</code> appends the string ‘hello, world’ to the end of the file named <code>test2.txt</code>. If <code>test2.txt</code> does not exist, it will create a new file.</p>
+<p><strong>Solution to Q4.2:</strong> - The first command <code>echo &#39;hello, world&#39; &gt; test1.txt</code> creates a new file named <code>test1.txt</code> and writes the string ‘hello, world’ into it. - The second command <code>echo &#39;hello, world&#39; &gt;&gt; test2.txt</code> appends the string ‘hello, world’ to the end of the file named <code>test2.txt</code>. If <code>test2.txt</code> does not exist, it will create a new file.</p>
 <ol start="3" type="1">
 <li>Using your favorite text editor (e.g., <code>vi</code>), type the following and save the file as <code>middle.sh</code>:</li>
 </ol>
@@ -2591,7 +2589,15 @@ Variable column 10 (top 20):
 <section id="q7.-ai-assistant" class="level2">
 <h2 class="anchored" data-anchor-id="q7.-ai-assistant">Q7. AI assistant</h2>
 <p>Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity?</p>
+<p><strong>Solution to Q7.1:</strong> I used GitHub Copilot, which utilizes the GPT-4 model, while working on this assignment. I primarily used it to generate code snippets, suggest improvements to my existing code. Overall, I found that using GitHub Copilot significantly improved my productivity by speeding up the coding process and providing useful suggestions that enhanced the quality of my work.</p>
 <p>Give 5 instances where AI model gave incorrect or misleading answers. You can use screenshots or copy-paste the Q&amp;A.</p>
+<p><strong>Solution to Q7.2:</strong> 1. Sometimes the AI provides Docker commands even though I am not always using Docker, which can be misleading in certain situations.</p>
+<ol start="2" type="1">
+<li><p>GitHub Copilot often gives incorrect answers. For example, when generating written responses, it sometimes produces incorrect or random numerical values.</p></li>
+<li><p>At the beginning of troubleshooting environment-related issues, I wanted to use Docker to write Linux commands, but the AI was unable to provide correct or appropriate environment setup instructions.</p></li>
+<li><p>The AI often provides answers that are not relevant to the actual question being asked.</p></li>
+<li><p>When I asked for specific code implementations, the AI sometimes generated code that did not align with best practices or was not optimized for performance.</p></li>
+</ol>
 </section>
 
 </main>
