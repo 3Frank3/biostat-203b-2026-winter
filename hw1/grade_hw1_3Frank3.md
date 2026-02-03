@@ -1,6 +1,6 @@
 *HSU, CHIH WEI (3Frank3)*
 
-### Overall Grade: 108/140
+### Overall Grade: 118/140
 
 ---
 
@@ -14,17 +14,15 @@
 
 ---
 
-### Completeness, correctness and efficiency of solution: 75/90
+### Completeness, correctness and efficiency of solution: 85/90
 
 **Q1 (10/10)**
 
 - Repository name correctly set up.
 
-**Q2 (5/20)**
+**Q2 (15/20)**
 
-- CITI training completion link is **not provided**. The Q2 section appears incomplete, with no CITI or PhysioNet verification links displayed.
-
-- **-15 points**: CITI training completion link not provided.
+- **-5 points**: The first submission did not include both links.
 
 **Q3 (16/20)**
 
