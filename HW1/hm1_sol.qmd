@@ -114,7 +114,7 @@ Use Bash commands to answer following questions.
 #| eval: true
 # contents of hosp folder
 ls -l ~/mimic/hosp
-ls -l ~/mimic//icu
+ls -l ~/mimic/icu
 ```
 
 The data files are distributed as `.csv.gz` files instead of `.csv`
@@ -129,7 +129,7 @@ improve data handling efficiency.
 
 ```{bash}
 #| eval: false
-zcat < ~/mimic/hosp/admissions.csv.gz | head -10
+zmore< ~/mimic/hosp/admissions.csv.gz | head -5
 ```
 
 **Solution to Q3.3:** - `zcat`: Outputs the contents of a
@@ -152,7 +152,7 @@ done
 **Solution to Q3.4:** The output of the bash script lists the details
 (permissions, number of links, owner, group, size, modification date,
 and filename) of all files in the
-`~/mimic/physionet.org/files/mimiciv/3.1/hosp/` directory that start
+`~/mimic/hosp/` directory that start
 with 'a', 'l', or 'pa' and have a `.gz` extension.
 
 Display the number of lines in each data file using a similar loop.
