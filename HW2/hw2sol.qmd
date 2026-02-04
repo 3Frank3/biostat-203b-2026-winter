@@ -41,11 +41,11 @@ In this exercise, we explore various tools for ingesting the [MIMIC-IV](https://
 Display the contents of MIMIC `hosp` and `icu` data folders:
 
 ```{bash}
-ls -l ~/mimic/physionet.org/files/mimiciv/3.1/hosp
+ls -l ~/mimic/hosp
 ```
 
 ```{bash}
-ls -l ~/mimic/physionet.org/files/mimiciv/3.1/icu/
+ls -l ~/mimic/icu
 ```
 
 ## Q1. `read.csv` (base R) vs `read_csv` (tidyverse) vs `fread` (data.table)
@@ -55,6 +55,22 @@ ls -l ~/mimic/physionet.org/files/mimiciv/3.1/icu/
 There are quite a few utilities in R for reading plain text data files. Let us test the speed of reading a moderate sized compressed csv file, `admissions.csv.gz`, by three functions: `read.csv` in base R, `read_csv` in tidyverse, and `fread` in the data.table package.
 
 Which function is fastest? Is there difference in the (default) parsed data types? How much memory does each resultant dataframe or tibble use? (Hint: `system.time` measures run times; `pryr::object_size` measures memory usage; all these readers can take gz file as input without explicit decompression.) 
+
+```{r}
+# read.csv in base R
+read_csv_time <- system.time({
+  admissions_read_csv <- read.csv(gzfile("~/mimic/hosp/admissions.csv.gz"))
+})
+# read.csv in tidyverse
+read_csv_time <- system.time({
+  admissions_read_csv <- read_csv(gzfile("~/mimic/hosp/admissions.csv.gz"))
+})
+# fread in data.table  
+fread_time <- system.time({
+  admissions_fread <- fread(gzfile("~/mimic/hosp/admissions.csv.gz"))
+})
+
+```
 
 ### Q1.2 User-supplied data types
 
