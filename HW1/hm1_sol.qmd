@@ -126,7 +126,7 @@ improve data handling efficiency.
 
 ```{bash}
 #| eval: false
-zcat < ~/mimic/physionet.org/files/mimiciv/3.1/hosp/admissions.csv.gz | head -10
+zcat < ~/mimi/hosp/labevent.csv.gz | head -10
 ```
 
 **Solution to Q3.3:** - `zcat`: Outputs the contents of a
