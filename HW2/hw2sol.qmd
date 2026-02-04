@@ -67,7 +67,7 @@ read_csv_time <- system.time({
 })
 # fread in data.table  
 fread_time <- system.time({
-  admissions_fread <- fread(gzfile("~/mimic/hosp/admissions.csv.gz"))
+  admissions_fread <- fread("~/mimic/hosp/admissions.csv.gz")
 })
 
 ```
