@@ -129,7 +129,7 @@ improve data handling efficiency.
 
 ```{bash}
 #| eval: false
-zmore< ~/mimic/hosp/admissions.csv.gz | head -5
+zcat< ~/mimic/hosp/labevents.csv.gz | head -10
 ```
 
 **Solution to Q3.3:** - `zcat`: Outputs the contents of a
@@ -178,15 +178,15 @@ done
 ```{bash}
 #| eval: true
 # Display first few lines of admissions.csv.gz
-zcat < ~/mimic/hosp/admissions.csv.gz | head -10
+zcat < ~/mimic/hosp/labevents.csv.gz | head -10
 # Count number of rows excluding header
-zcat < ~/mimic/hosp/admissions.csv.gz | tail -n +2 | wc -l
+zcat < ~/mimic/hosp/labevents.csv.gz | tail -n +2 | wc -l
 # Count number of unique hadm_id
-zcat < ~/mimic/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $2}' | sort | uniq | wc -l
+zcat < ~/mimic/hosp/labevents.csv.gz | tail -n +2 | awk -F, '{print $5}' | sort | uniq | wc -l
 # Count number of unique subject_id
 zcat < ~/mimic/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
 # Count number of unique subject_id in patients.csv.gz
-zcat < ~/mimic/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < ~/mimic/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $5}' | sort | uniq | wc -l
 ```
 
 **Solution to Q3.5:** - There are 546028 rows in the `admissions.csv.gz`
