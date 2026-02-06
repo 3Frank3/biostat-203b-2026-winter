@@ -57,20 +57,25 @@ There are quite a few utilities in R for reading plain text data files. Let us t
 Which function is fastest? Is there difference in the (default) parsed data types? How much memory does each resultant dataframe or tibble use? (Hint: `system.time` measures run times; `pryr::object_size` measures memory usage; all these readers can take gz file as input without explicit decompression.) 
 
 ```{r}
-# read.csv in base R
-read_csv_time <- system.time({
-  admissions_read_csv <- read.csv(gzfile("~/mimic/hosp/admissions.csv.gz"))
-})
-# read.csv in tidyverse
-read_csv_time <- system.time({
-  admissions_read_csv <- read_csv(gzfile("~/mimic/hosp/admissions.csv.gz"))
-})
-# fread in data.table  
-fread_time <- system.time({
-  admissions_fread <- fread("~/mimic/hosp/admissions.csv.gz")
-})
+f <- "~/mimic/hosp/admissions.csv.gz"
+
+bench_one <- function(expr) {
+  system.time(force(expr))
+}
+
+t_base  <- bench_one(x_base  <- read.csv(f))
+t_readr <- bench_one(x_readr <- read_csv(f, show_col_types = FALSE))
+t_dt    <- bench_one(x_dt    <- fread(f))
+
+rbind(
+  read_csv_baseR = t_base,
+  readr_read_csv = t_readr,
+  data_table_fread = t_dt
+)
+
 
 ```
+ㄅ
 
 ### Q1.2 User-supplied data types
 
