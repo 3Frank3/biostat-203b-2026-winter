@@ -75,7 +75,6 @@ rbind(
 
 
 ```
-ㄅ
 
 ### Q1.2 User-supplied data types
 
