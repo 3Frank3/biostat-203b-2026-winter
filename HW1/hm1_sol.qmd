@@ -129,11 +129,7 @@ improve data handling efficiency.
 
 ```{bash}
 #| eval: false
-<<<<<<< HEAD
-zcat < ~/mimi/hosp/labevent.csv.gz | head -10
-=======
 zcat< ~/mimic/hosp/labevents.csv.gz | head -10
->>>>>>> main
 ```
 
 **Solution to Q3.3:** - `zcat`: Outputs the contents of a
@@ -171,26 +167,57 @@ do
 done
 ```
 
-5.  Display the first few lines of `admissions.csv.gz`. How many rows
-    are in this data file, excluding the header line? Each `hadm_id`
-    identifies a hospitalization. How many hospitalizations are in this
-    data file? How many unique patients (identified by `subject_id`) are
-    in this data file? Do they match the number of patients listed in
-    the `patients.csv.gz` file? (Hint: combine Linux commands `zcat <`,
-    `head`/`tail`, `awk`, `sort`, `uniq`, `wc`, and so on.)
+5.  Display the first few lines of `admissions.csv.gz`. How many rows are in this data file, excluding the header line? 
+```{bash}
+#| eval: false
+# Display first few lines of admissions.csv.gz
+zcat < ~/mimic/hosp/admissions.csv.gz | head -5
+
+```
+```{bash}
+#| eval: false
+# Count number of rows excluding header
+zmore < ~/mimic/hosp/admissions.csv.gz | tail -n +2 | wc -l
+```
+5-1. Each `hadm_id` identifies a hospitalization. How many hospitalizations are in this data file?
+```{bash}
+#| eval: false
+# Count number of unique hadm_id
+zcat < ~/mimic/hosp/admissions.csv.gz | 
+tail -n +2 | 
+awk -F, '{print $2}' |
+sort | 
+uniq |
+wc -l
+```
+5-2. How many unique patients (identified by `subject_id`) are in this data file? 
+```{bash}
+#| eval: false
+# Count number of unique subject_id
+zcat < ~/mimic/hosp/admissions.csv.gz | 
+tail -n +2 | 
+awk -F, '{print $1}' |
+sort | 
+uniq | 
+wc -l
+```
+5-3. Do they match the number of patients listed in the `patients.csv.gz` file? (Hint: combine Linux commands `zcat <`,
+`head`/`tail`, `awk`, `sort`, `uniq`, `wc`, and so on.)
+```{bash}
+#| eval: false
+# display first few lines of patients.csv.gz
+zcat < ~/mimic/hosp/patients.csv.gz | head -5
+```
 
 ```{bash}
-#| eval: true
-# Display first few lines of admissions.csv.gz
-zcat < ~/mimic/hosp/labevents.csv.gz | head -10
-# Count number of rows excluding header
-zcat < ~/mimic/hosp/labevents.csv.gz | tail -n +2 | wc -l
-# Count number of unique hadm_id
-zcat < ~/mimic/hosp/labevents.csv.gz | tail -n +2 | awk -F, '{print $5}' | sort | uniq | wc -l
-# Count number of unique subject_id
-zcat < ~/mimic/hosp/admissions.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+#| eval: false
 # Count number of unique subject_id in patients.csv.gz
-zcat < ~/mimic/hosp/patients.csv.gz | tail -n +2 | awk -F, '{print $5}' | sort | uniq | wc -l
+zcat < ~/mimic/hosp/patients.csv.gz | 
+tail -n +2 |
+awk -F, '{print $1}' | 
+sort | 
+uniq | 
+wc -l
 ```
 
 **Solution to Q3.5:** - There are 546028 rows in the `admissions.csv.gz`
@@ -206,21 +233,17 @@ listed in the `patients.csv.gz` file, which is 364627.
     variables in decreasing order. (Hint: combine Linux commands `zcat`,
     `head`/`tail`, `awk`, `uniq -c`, `wc`, `sort`, and so on; skip the
     header line.)
-
+    
+the possible values taken by "admission_type"
 ```{bash}
 #| eval: True
-for var_col in 6 8 10 13
-do
-  echo "Variable column $var_col (top 20):"
-  zcat < ~/mimic/hosp/admissions.csv.gz \
-    | tail -n +2 \
-    | awk -F, -v c="$var_col" '{print $c}' \
-    | sort \
-    | uniq -c \
-    | sort -nr \
-    | head -n 20
-  echo ""
-done
+zcat < ~/mimic/hosp/admissions.csv.gz| 
+tail -n +2 |
+awk -F, '{print $6}' | 
+sort | 
+uniq -c | 
+sort -k 1 -n -r
+
 ```
 
 7.  The `icusays.csv.gz` file contains all the ICU stays during the
@@ -230,10 +253,26 @@ done
 
 ```{bash}
 #| eval: false
+# display stay_id
+zcat < ~/mimic/icu/icustays.csv.gz | head -5 
+```
+
+```{bash}
+#| eval: false
 # Count number of unique stay_id
-zcat < ~/mimic/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $3}' | sort | uniq | wc -l
+zcat < ~/mimic/icu/icustays.csv.gz | 
+tail -n +2 | 
+awk -F, '{print $3}' |
+sort | 
+uniq | 
+wc -l
 # Count number of unique subject_id
-zcat < ~/mimic/icu/icustays.csv.gz | tail -n +2 | awk -F, '{print $1}' | sort | uniq | wc -l
+zcat < ~/mimic/icu/icustays.csv.gz | 
+tail -n +2 | 
+awk -F, '{print $1}' | 
+sort | 
+uniq | 
+wc -l
 ```
 
 **Solution to Q3.7:** - There are 94458 unique ICU stays (`stay_id`)in
@@ -250,17 +289,29 @@ patients(`subject_id`) in the `icusays.csv.gz` file.
     `labevents.csv` file after the exercise.)
 
 ```{bash}
-#| eval: true
-# Compare file sizes
-ls -lh ~/mimic/hosp/labevents.csv.gz
-gzip -dk < ~/mimic/hosp/labevents.csv.gz > ./labevents.csv
-ls -lh ./labevents.csv
-# Compare run times
-time zcat < ~/mimic/hosp/labevents.csv.gz | wc -l
-time wc -l ./labevents.csv
-# Remove uncompressed file
-rm ./labevents.csv
+if [ -s labevents.csv ]; then
+  echo "File labevents.csv exists in the current folder."
+elif [ -s ~/mimic/hosp/labevents.csv ]; then
+  echo "labevents.csv exists in ~/mimic/hosp folder."
+  echo "Create a symbolic link."
+  ln -s ~/mimic/hosp/labevents.csv labevents.csv
+else
+  time gzip -dk < ~/mimic/hosp/labevents.csv.gz > ./labevents.csv
+fi
 ```
+
+```{bash}
+ls -l -L labevents.csv
+```
+count number of lines in the compressed file with `zcat` 
+```{bash}
+time zcat < ~/mimic/hosp/labevents.csv.gz | wc -l
+```
+count lines from the uncompressed file with `wc -l`
+```{bash}
+time wc -l labevents.csv
+```
+
 
 **Solution to Q3.8:** - The compressed `labevents.csv.gz` file is
 significantly smaller than the uncompressed `labevents.csv` file, which
