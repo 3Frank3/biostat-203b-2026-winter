@@ -167,8 +167,7 @@ gzip > labevents_filtered.csv.gz
 Display the first 10 lines of the new file `labevents_filtered.csv.gz`. 
 
 ```{bash}
-zcat < labevents_filtered.csv.gz | 
-head -10
+zcat < labevents_filtered.csv.gz | head -10
 ```
 How many lines are in this new file, excluding the header? 
 ```{bash}
@@ -202,6 +201,10 @@ gzip -d -c ~/mimic/hosp/labevents.csv.gz > labevents.csv
 
 Then use [`arrow::open_dataset`](https://arrow.apache.org/docs/r/reference/open_dataset.html) to ingest `labevents.csv`, select columns, and filter `itemid` as in Q2.3. How long does the ingest+select+filter process take? 
 ```{r}
+items <- c(
+  50862, 50912, 50971, 50983, 50902,
+  50882, 51221, 51301, 50931
+)
 system.time({
 t_labevents_arrow <-
   open_dataset("./labevents.csv", format = "csv") |>
@@ -245,12 +248,8 @@ ls -l labevents_parquet
 
 How long does the ingest+select+filter process of the Parquet file(s) take? 
 ```{r}
-items <- c(
-  50862, 50912, 50971, 50983, 50902,
-  50882, 51221, 51301, 50931
-)
 system.time({
-t_labevents_arrow_parquet <-
+t_labevents_parquet <-
   open_dataset("./labevents_parquet", format = "parquet") |>
   select(subject_id, itemid, charttime, valuenum) |>
   filter(itemid %in% items) |>
@@ -260,8 +259,8 @@ t_labevents_arrow_parquet <-
 
 Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 ```{r}
-nrow(t_labevents_arrow_parquet)
-head(t_labevents_arrow_parquet, 10)
+nrow(t_labevents_parquet)
+head(t_labevents_parquet, 10)
 ```
 Write a few sentences to explain what the Parquet format is. Imagine you want to explain it to a layman in an elevator.
 **solution:** Parquet is a columnar storage file format that is optimized for big data processing. It is designed to efficiently store and query large datasets by organizing data in a way that allows for faster read and write operations. In simple terms, it is like a more efficient way to store data on disk, which can significantly reduce the time it takes to read and analyze large datasets compared to traditional row-based formats like CSV.
@@ -274,11 +273,13 @@ Write a few sentences to explain what the Parquet format is. Imagine you want to
 
 Ingest the Parquet file, convert it to a DuckDB table by [`arrow::to_duckdb`](https://arrow.apache.org/docs/r/reference/to_duckdb.html), select columns, and filter rows as in Q2.5. How long does the ingest+convert+select+filter process take? 
 ```{r}
-to_duckdb(
-  open_dataset("./labevents_parquet", format = "parquet"),
-  path = "labevents_duckdb"
-  format = "duckdb"
-)
+system.time({
+t_labevents_parquet |>
+  select(subject_id, itemid, charttime, valuenum) |>
+  filter(itemid %in% items) |>
+  to_duckdb() |>
+  collect() -> t_labevents_duckdb
+})
 ```
 Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 ```{r}
@@ -286,6 +287,7 @@ nrow(t_labevents_duckdb)
 head(t_labevents_duckdb, 10)
 ```
 Write a few sentences to explain what DuckDB is. Imagine you want to explain it to a layman in an elevator.
+**solution:** DuckDB is an in-process SQL database management system that is designed for analytical workloads. It allows you to run SQL queries on large datasets without the need for a separate database server, making it easy to integrate into applications and workflows. In simple terms, it is like having a powerful SQL engine built into your application that can efficiently query and analyze large datasets without the overhead of setting up and managing a traditional database server.
 
 ## Q3. Ingest and filter `chartevents.csv.gz`
 
@@ -296,7 +298,9 @@ zcat < ~/mimic/icu/chartevents.csv.gz | head -10
 How many rows? 433 millions.
 ```{bash}
 #| eval: false
-zcat < ~/mimic/icu/chartevents.csv.gz | tail -n +2 | wc -l
+zcat < ~/mimic/icu/chartevents.csv.gz | 
+tail -n +2 | 
+wc -l
 ```
 [`d_items.csv.gz`](https://mimic.mit.edu/docs/iv/modules/icu/d_items/) is the dictionary for the `itemid` in `chartevents.csv.gz`.
 ```{bash}
