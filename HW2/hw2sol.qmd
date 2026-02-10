@@ -55,17 +55,51 @@ ls -l ~/mimic/icu
 
 There are quite a few utilities in R for reading plain text data files. Let us test the speed of reading a moderate sized compressed csv file, `admissions.csv.gz`, by three functions: `read.csv` in base R, `read_csv` in tidyverse, and `fread` in the data.table package.
 
-Which function is fastest? Is there difference in the (default) parsed data types? How much memory does each resultant dataframe or tibble use? (Hint: `system.time` measures run times; `pryr::object_size` measures memory usage; all these readers can take gz file as input without explicit decompression.) 
+Which function is fastest? 
 
+Base R
+```{r}
+r_baseline_time <- system.time({
+  r_admissions <- read.csv("~/mimic/hosp/admissions.csv.gz")
+})
+r_baseline_time
+```
+
+Tidyverse
 ```{r}
 t_baseline_time <- system.time({
-  admissions_baseline <- read_csv(
-    "~/mimic/hosp/admissions.csv.gz"
-  )
+  t_admissions <- read_csv(
+    "~/mimic/hosp/admissions.csv.gz",
+    show_col_types = FALSE
+    )
 })
-
 t_baseline_time
 ```
+
+Data.table
+```{r}
+f_baseline_time <- system.time({
+  f_admissions <- fread("~/mimic/hosp/admissions.csv.gz")
+})
+f_baseline_time
+```
+**solutins**: The fastest function for reading the `admissions.csv.gz` file is `fread` from the data.table package, followed by `read_csv` from tidyverse, and then `read.csv` from base R. 
+
+Is there difference in the (default) parsed data types? 
+```{r}
+str(r_admissions)
+str(t_admissions)
+str(f_admissions)
+```
+**solution:** Yes, there are differences in the default parsed data types among the three functions.
+
+How much memory does each resultant dataframe or tibble use? (Hint: `system.time` measures run times; `pryr::object_size` measures memory usage; all these readers can take gz file as input without explicit decompression.)
+```{r}
+object_size(r_admissions)
+object_size(t_admissions)
+object_size(f_admissions)
+```
+**solution:** The memory usage of the resultant dataframes or tibbles varies among the three functions. Generally, `fread` from the data.table package tends to use less memory compared to `read.csv` from base R and `read_csv` from tidyverse, which can be attributed to its optimized parsing and memory management.
 
 ### Q1.2 User-supplied data types
 
@@ -83,20 +117,20 @@ ct <- cols(
   admittime = col_datetime(format = ""),
   dischtime = col_datetime(format = ""),
   deathtime = col_datetime(format = ""),
-  admission_type = col_character(),
-  admit_provider_id = col_character(),
-  admission_location = col_character(),
-  discharge_location = col_character(),
-  insurance = col_character(),
-  language = col_character(),
-  marital_status = col_character(),
-  race = col_character(),
+  admission_type = col_factor(),
+  admit_provider_id = col_factor(),
+  admission_location = col_factor(),
+  discharge_location = col_factor(),
+  insurance = col_factor(),
+  language = col_factor(),
+  marital_status = col_factor(),
+  race = col_factor(),
   edregtime = col_datetime(format = ""),
   edouttime = col_datetime(format = ""),
   hospital_expire_flag = col_integer()
 )
 t_typed_time <- system.time({
-  admissions_typed <- read_csv(
+  t_admissions_typed <- read_csv(
     "~/mimic/hosp/admissions.csv.gz",
     col_types = ct,
     show_col_types = FALSE
@@ -108,7 +142,12 @@ Does the run time change?
 ```{r}
 cat("baseline_time: ",t_baseline_time["elapsed"], "\n", "typed_time: ", t_typed_time["elapsed"])
 ```
+**solution:** The run time after indicating appropriate column data types in `read_csv` is reduced compared to the default behavior. This is because when you specify the column data types, `read_csv` can optimize the parsing process and avoid the overhead of guessing the data types for each column, which can be time-consuming for large files.
+
 How much memory does the result tibble use? (Hint: `col_types` argument in `read_csv`; result tibble should be less than 50MB.)
+```{r}
+object_size(t_admissions_typed)
+```
 
 
 
@@ -333,25 +372,48 @@ wc -l
 zcat < ~/mimic/icu/d_items.csv.gz | head -10
 ```
 In later exercises, we are interested in the vitals for ICU patients: heart rate (220045), mean non-invasive blood pressure (220181), systolic non-invasive blood pressure (220179), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items, using the favorite method you learnt in Q2. 
+
+### Q3.1 Ingest `chartevents.csv.gz` by Apache Arrow 
+
+I first Decompress `chartevents.csv.gz` to `chartevents.csv`.
 ```{bash}
 #| eval: false
-ITEMID='220045 220181 220179 223761 220210'
-
-zcat < ~/mimic/icu/chartevents.csv.gz |
-awk -F',' -v items="$ITEMID" '
-BEGIN {
-  OFS=",";
-  n=split(items,a," ");
-  for (i=1; i<=n; i++) keep[a[i]]=1;
-}
-NR==1 { print "subject_id","itemid","value","valuenum"; next }
-keep[$5] { print $1,$7,$8,$9 }
-' |
-gzip > chartevents_filtered.csv.gz
+gzip -d -c ~/mimic/icu/chartevents.csv.gz > chartevents.csv
 ```
 
-Document the steps and show code. Display the number of rows and the first 10 rows of the result tibble.
+Ingest+select+filter process.
+```{r}
+icu_items <- c(
+  220405, 220181, 220179, 223761, 220210
+)
 
+t_chartevents_arrow <-
+  open_dataset("./chartevents.csv", format = "csv") |>
+  select(subject_id, itemid, value, valuenum) |>
+  filter(itemid %in% icu_items) |>
+  collect()
+```
+
+Read d_itemid.csv.gz
+```{r}
+d_itemid <-
+  read_csv(
+    "~/mimic/icu/d_items.csv.gz",
+    col_select = c(itemid, label),
+    show_col_types = FALSE
+  )
+```
+Left join with d_items to get itemid's label.
+```{r}
+t_chartevents_labeled <-
+  t_chartevents_arrow |>
+  left_join(d_itemid, by = "itemid")
+```
+Display the number of rows and the first 10 rows of the result tibble.
+```{r}
+nrow(t_chartevents_labeled)
+head(t_chartevents_labeled, 10)
+```
 ## Q4. AI assistant
 
 Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity? 
