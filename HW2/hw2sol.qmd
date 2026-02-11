@@ -177,7 +177,7 @@ head -10
 
 Try to ingest `labevents.csv.gz` using `read_csv`. What happens? If it takes more than 3 minutes on your computer, then abort the program and report your findings. 
 
-```{r,eval: false}
+```{r,eval=FALSE}
 t_labevents <- read_csv(
   "~/mimic/hosp/labevents.csv.gz", 
   show_col_types = FALSE
@@ -242,7 +242,7 @@ wc -l
 ```
 
 How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
-```{r,eval=FALSE}
+```{r}
 system.time({
   t_labevents_filt <- read_csv(
     "labevents_filtered.csv.gz"
@@ -308,6 +308,7 @@ write_dataset(
 How large is the Parquet file(s)? 
 ```{bash}
 ls -l labevents_parquet
+du -sh labevents_parquet
 ```
 **solution:** The Parquet file(s) is about 2.74GB.
 
