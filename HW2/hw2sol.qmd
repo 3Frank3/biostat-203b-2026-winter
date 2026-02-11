@@ -1,6 +1,6 @@
 ---
 title: "Biostat 203B Homework 2"
-subtitle: Due Feb 8, 2026 @ 11:59PM
+subtitle: Due Feb 11, 2026 @ 11:59PM
 author: "CHIH WEI HSU, UID: 706788612"
 format:
   html:
@@ -191,7 +191,7 @@ t_labevents <- read_csv(
 
 Try to ingest only columns `subject_id`, `itemid`, `charttime`, and `valuenum` in `labevents.csv.gz` using `read_csv`.  Does this solve the ingestion issue? (Hint: `col_select` argument in `read_csv`.)
 
-```{r,eval: true}
+```{r,eval: false}
 t_labevents_sel <- read_csv(
   "~/mimic/hosp/labevents.csv.gz",
   show_col_types = FALSE, 
@@ -242,7 +242,7 @@ wc -l
 ```
 
 How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
-```{r}
+```{r,eval=FALSE}
 system.time({
   t_labevents_filt <- read_csv(
     "labevents_filtered.csv.gz"
@@ -418,4 +418,20 @@ head(t_chartevents_labeled, 10)
 
 Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity? 
 
+**solution:** I use ChatGPT as a primary AI assistants and GitHub Copilot inside the editor, and ChatGPT AI model is GPT-5.2. I use them to generate code snippets, explain concepts, and help debug issues. They do help improve my productivity by providing quick answers and suggestions, but I always verify the information they provide.
+
 Give 5 instances where AI model gave incorrect or misleading answers. You can use screenshots or copy-paste the Q&A.
+
+**solution:**
+1. In Q1.1, copilot can't generate correct answer about memory and speed.
+
+2. Misleading advice about read_csv() memory usage.
+
+3. Incorrect suggestion to use zless on very large files.
+
+4. In some cases, the AI assistant generated code that was relevant to
+previous questions rather than the current question being asked.
+
+5. In Q2.3, AI initially generated an awk pipeline where
+several lines exceeded the 80-character limit. 
+
