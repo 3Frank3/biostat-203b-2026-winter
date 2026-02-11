@@ -30,6 +30,7 @@ library(pryr)
 library(R.utils)
 library(tidyverse)
 library(dplyr)
+Sys.setenv(TZ = "UTC")
 ```
 
 Display memory information of your computer
@@ -154,10 +155,6 @@ object_size(t_admissions_typed)
 
 ## Q2. Ingest big data files
 
-<p align="center">
-  <img src="./bigfile.png" width="50%">
-</p>
-
 Let us focus on a bigger file, `labevents.csv.gz`, which is about 130x bigger than `admissions.csv.gz`.
 ```{bash}
 ls -l ~/mimic/hosp/labevents.csv.gz
@@ -170,28 +167,17 @@ head -10
 
 ### Q2.1 Ingest `labevents.csv.gz` by `read_csv`
 
-<p align="center">
-  <img src="./readr_logo.png" width="20%">
-</p>
-
-
 Try to ingest `labevents.csv.gz` using `read_csv`. What happens? If it takes more than 3 minutes on your computer, then abort the program and report your findings. 
 
-```{r,eval=FALSE}
-t_labevents <- read_csv(
-  "~/mimic/hosp/labevents.csv.gz", 
-  show_col_types = FALSE
-)
-```
 
-**solution:** The program takes more than 3 minutes and eventually runs out of memory. It is because `labevents.csv.gz` is a big data file (about 130GB uncompressed) that cannot fit into memory. The default behavior of `read_csv` is to read the entire file into memory, which causes the program to run out of memory and fail.
+**solution:** The program takes more than 3 minutes and eventually runs out of memory. It is because `labevents.csv.gz` is a big data file (about 130GB uncompressed) that cannot fit into memory. The default behavior of `read.csv` is to read the entire file into memory, which causes the program to run out of memory and fail.
 
 
 ### Q2.2 Ingest selected columns of `labevents.csv.gz` by `read_csv`
 
 Try to ingest only columns `subject_id`, `itemid`, `charttime`, and `valuenum` in `labevents.csv.gz` using `read_csv`.  Does this solve the ingestion issue? (Hint: `col_select` argument in `read_csv`.)
 
-```{r,eval: false}
+```{r}
 t_labevents_sel <- read_csv(
   "~/mimic/hosp/labevents.csv.gz",
   show_col_types = FALSE, 
@@ -203,10 +189,6 @@ t_labevents_sel
 **solution:** Yes, it solves the ingestion issue. By selecting only the necessary columns, we reduce the amount of data that needs to be read into memory, which allows `read_csv` to successfully ingest the file without running out of memory. However, it may still take a long time to read the file due to its large size.
 
 ### Q2.3 Ingest a subset of `labevents.csv.gz`
-
-<p align="center">
-  <img src="./linux_logo.png" width="20%">
-</p>
 
 Our first strategy to handle this big data file is to make a subset of the `labevents` data.  Read the [MIMIC documentation](https://mimic.mit.edu/docs/iv/modules/hosp/labevents/) for the content in data file `labevents.csv`.
 
@@ -226,7 +208,7 @@ BEGIN {
 NR==1 { print "subject_id","itemid","charttime","valuenum"; next }
 keep[$5] { print $2,$5,$7,$10 }
 ' |
-gzip > labevents_filtered.csv.gz
+gzip -9  > labevents_filtered.csv.gz
 ```
 
 Display the first 10 lines of the new file `labevents_filtered.csv.gz`. 
@@ -244,9 +226,7 @@ wc -l
 How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
 ```{r}
 system.time({
-  t_labevents_filt <- read_csv(
-    "labevents_filtered.csv.gz"
-  )
+  read_csv("labevents_filtered.csv.gz")
 })
 ```
 
@@ -271,8 +251,8 @@ items <- c(
   50882, 51221, 51301, 50931
 )
 system.time({
-t_labevents_arrow <-
-  open_dataset("./labevents.csv", format = "csv") |>
+labevents_arrow <-
+  arrow::open_dataset("./labevents.csv", format = "csv") |>
   select(subject_id, itemid, charttime, valuenum) |>
   filter(itemid %in% items) |>
   collect()
@@ -282,8 +262,10 @@ t_labevents_arrow <-
 Display the number of rows and the first 10 rows of the result tibble, and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
 ```{r}
-nrow(t_labevents_arrow)
-head(t_labevents_arrow, 10)
+labevents_arrow |>
+  arrange(subject_id, charttime, itemid) |>
+  head(10)
+nrow(labevents_arrow)
 ```
 
 Write a few sentences to explain what Apache Arrow is. Imagine you want to explain it to a layman in an elevator.
@@ -292,13 +274,9 @@ Write a few sentences to explain what Apache Arrow is. Imagine you want to expla
 
 ### Q2.5 Compress `labevents.csv` to Parquet format and ingest/select/filter
 
-<p align="center">
-  <img src="./parquet_logo.png" width="30%">
-</p>
-
 Re-write the csv file `labevents.csv` in the binary Parquet format (Hint: [`arrow::write_dataset`](https://arrow.apache.org/docs/r/reference/write_dataset.html).)
 ```{r}
-write_dataset(
+arrow::write_dataset(
   open_dataset("./labevents.csv", format = "csv"),
   path = "labevents_parquet",
   format = "parquet"
@@ -310,12 +288,12 @@ How large is the Parquet file(s)?
 ls -l labevents_parquet
 du -sh labevents_parquet
 ```
-**solution:** The Parquet file(s) is about 2.74GB.
+**solution:** The Parquet file(s) is about 2.6GB.
 
 How long does the ingest+select+filter process of the Parquet file(s) take? 
 ```{r}
 system.time({
-t_labevents_parquet <-
+labevents_parquet <-
   open_dataset("./labevents_parquet", format = "parquet") |>
   select(subject_id, itemid, charttime, valuenum) |>
   filter(itemid %in% items) |>
@@ -325,35 +303,40 @@ t_labevents_parquet <-
 
 Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 ```{r}
-nrow(t_labevents_parquet)
-head(t_labevents_parquet, 10)
+labevents_parquet |>
+  arrange(subject_id, charttime, itemid) |>
+  head(10)
+nrow(labevents_parquet)
 ```
 Write a few sentences to explain what the Parquet format is. Imagine you want to explain it to a layman in an elevator.
+
 **solution:** Parquet is a columnar storage file format that is optimized for big data processing. It is designed to efficiently store and query large datasets by organizing data in a way that allows for faster read and write operations. In simple terms, it is like a more efficient way to store data on disk, which can significantly reduce the time it takes to read and analyze large datasets compared to traditional row-based formats like CSV.
 
 ### Q2.6 DuckDB
 
-<p align="center">
-  <img src="./duckdb_logo.png" width="20%">
-</p>
-
 Ingest the Parquet file, convert it to a DuckDB table by [`arrow::to_duckdb`](https://arrow.apache.org/docs/r/reference/to_duckdb.html), select columns, and filter rows as in Q2.5. How long does the ingest+convert+select+filter process take? 
 ```{r}
 system.time({
-t_labevents_parquet |>
+labevents_parquet |>
   select(subject_id, itemid, charttime, valuenum) |>
   filter(itemid %in% items) |>
-  to_duckdb() |>
-  collect() -> t_labevents_duckdb
+  arrow::to_duckdb() |>
+  collect() -> labevents_duckdb
 })
 ```
 Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 ```{r}
-nrow(t_labevents_duckdb)
-head(t_labevents_duckdb, 10)
+labevents_duckdb |>
+  arrange(subject_id, charttime, itemid) |>
+  head(10)
+nrow(labevents_duckdb)
 ```
 Write a few sentences to explain what DuckDB is. Imagine you want to explain it to a layman in an elevator.
-**solution:** DuckDB is an in-process SQL database management system that is designed for analytical workloads. It allows you to run SQL queries on large datasets without the need for a separate database server, making it easy to integrate into applications and workflows. In simple terms, it is like having a powerful SQL engine built into your application that can efficiently query and analyze large datasets without the overhead of setting up and managing a traditional database server.
+
+**solution:** DuckDB is an in-process analytical database, meaning it runs inside
+your application rather than as a separate server. It is optimized for
+reading large datasets efficiently, especially columnar formats like
+Parquet, and supports SQL for data querying and analysis.
 
 ## Q3. Ingest and filter `chartevents.csv.gz`
 
@@ -374,7 +357,7 @@ zcat < ~/mimic/icu/d_items.csv.gz | head -10
 ```
 In later exercises, we are interested in the vitals for ICU patients: heart rate (220045), mean non-invasive blood pressure (220181), systolic non-invasive blood pressure (220179), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items, using the favorite method you learnt in Q2. 
 
-### Q3.1 Ingest `chartevents.csv.gz` by Apache Arrow 
+### Q3.1 Retrieve a subset of `chartevents.csv.gz` by compress it to Parquet format.
 
 I first Decompress `chartevents.csv.gz` to `chartevents.csv`.
 ```{bash}
@@ -382,17 +365,32 @@ I first Decompress `chartevents.csv.gz` to `chartevents.csv`.
 gzip -d -c ~/mimic/icu/chartevents.csv.gz > chartevents.csv
 ```
 
-Ingest+select+filter process.
+Re-write the csv file chartevents.csv in the binary Parquet format.
+```{r}
+arrow::write_dataset(
+  open_dataset("./chartevents.csv", format = "csv"),
+  path = "chartevents_parquet",
+  format = "parquet"
+)
+```
+
+Check how large is the Parquet file(s)?
+```{bash}
+du -sh chartevents_parquet
+```
+
+Ingest+select+filter process and also check how long does it take?
 ```{r}
 icu_items <- c(
   220405, 220181, 220179, 223761, 220210
 )
-
-t_chartevents_arrow <-
-  open_dataset("./chartevents.csv", format = "csv") |>
-  select(subject_id, itemid, value, valuenum) |>
+system.time({
+chartevents_parquet <-
+  arrow::open_dataset("./chartevents_parquet", format = "parquet") |>
+  select(subject_id, itemid, charttime, valuenum) |>
   filter(itemid %in% icu_items) |>
   collect()
+})
 ```
 
 Read d_itemid.csv.gz
@@ -404,16 +402,20 @@ d_itemid <-
     show_col_types = FALSE
   )
 ```
+
 Left join with d_items to get itemid's label.
 ```{r}
-t_chartevents_labeled <-
-  t_chartevents_arrow |>
+chartevents_labeled <-
+  chartevents_parquet |>
   left_join(d_itemid, by = "itemid")
 ```
+
 Display the number of rows and the first 10 rows of the result tibble.
 ```{r}
-nrow(t_chartevents_labeled)
-head(t_chartevents_labeled, 10)
+chartevents_labeled |>
+  arrange(subject_id, charttime, itemid) |>
+  head(10)
+nrow(chartevents_labeled)
 ```
 ## Q4. AI assistant
 
