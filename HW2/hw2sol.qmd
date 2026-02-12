@@ -244,10 +244,6 @@ system.time({
 
 ### Q2.4 Ingest `labevents.csv` by Apache Arrow
 
-<p align="center">
-  <img src="./arrow_logo.png" width="30%">
-</p>
-
 Our second strategy is to use [Apache Arrow](https://arrow.apache.org/) for larger-than-memory data analytics. Unfortunately Arrow does not work with gz files directly. 
 
 First decompress `labevents.csv.gz` to `labevents.csv` and put it in the current working directory (do not add it in Git!). To save render time, put `#| eval: false` at the beginning of this code chunk. TA will change it to `#| eval: true` when rendering your qmd file.
@@ -372,7 +368,7 @@ In later exercises, we are interested in the vitals for ICU patients: heart rate
 ### Q3.1 Retrieve a subset of `chartevents.csv.gz` by compress it to Parquet format.
 
 I first Decompress `chartevents.csv.gz` to `chartevents.csv`.
-```{bash}
+```{bash} 
 #| eval: false
 gzip -d -c ~/mimic/icu/chartevents.csv.gz > chartevents.csv
 ```
@@ -394,7 +390,7 @@ du -sh chartevents_parquet
 Ingest+select+filter process and also check how long does it take?
 ```{r}
 icu_items <- c(
-  220405, 220181, 220179, 223761, 220210
+  220045, 220181, 220179, 223761, 220210
 )
 system.time({
 chartevents_parquet <-

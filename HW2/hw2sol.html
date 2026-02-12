@@ -2419,8 +2419,8 @@ Attaching package: &#39;R.utils&#39;</code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Totalram:  24.000 GiB 
-Freeram:   98.156 MiB </code></pre>
+<pre><code>Totalram:   24.000 GiB 
+Freeram:   111.547 MiB </code></pre>
 </div>
 </div>
 <p>In this exercise, we explore various tools for ingesting the <a href="https://physionet.org/content/mimiciv/3.1/">MIMIC-IV</a> data introduced in <a href="https://ucla-biostat-203b.github.io/2026winter/hw/hw1/hw1.html">homework 1</a>.</p>
@@ -2428,44 +2428,38 @@ Freeram:   98.156 MiB </code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> ~/mimic/hosp</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>total 48917448
--rw-r--r--  1 xuzhiwei  staff     19928140 Jun 24  2024 admissions.csv.gz
--rw-r--r--  1 xuzhiwei  staff       427554 Apr 13  2024 d_hcpcs.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff      9076788 Feb  7 05:59 d_icd_diagnoses.csv
--rw-r--r--@ 1 xuzhiwei  staff       876360 Apr 13  2024 d_icd_diagnoses.csv.gz
--rw-r--r--  1 xuzhiwei  staff       589186 Apr 13  2024 d_icd_procedures.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff        64663 Feb  5 01:46 d_labitems.csv
--rw-r--r--@ 1 xuzhiwei  staff        13169 Oct  3  2024 d_labitems.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff     33564802 Oct  3  2024 diagnoses_icd.csv.gz
--rw-r--r--  1 xuzhiwei  staff      9743908 Oct  3  2024 drgcodes.csv.gz
--rwx------@ 1 xuzhiwei  staff    748158322 Apr 13  2024 emar_detail.csv.gz
--rw-r--r--  1 xuzhiwei  staff    811305629 Apr 13  2024 emar.csv.gz
--rw-r--r--  1 xuzhiwei  staff      2162335 Apr 13  2024 hcpcsevents.csv.gz
--rw-r--r--  1 xuzhiwei  staff         2907 Jan 22 00:09 index.html
--rw-r--r--@ 1 xuzhiwei  staff  18402851720 Feb  5 00:09 labevents.csv
--rw-r--r--@ 1 xuzhiwei  staff   2592909134 Oct  3  2024 labevents.csv.gz
--rw-r--r--  1 xuzhiwei  staff    117644075 Oct  3  2024 microbiologyevents.csv.gz
--rw-r--r--  1 xuzhiwei  staff    320875376 Feb  7 05:39 omr.csv
--rw-r--r--@ 1 xuzhiwei  staff     44069351 Oct  3  2024 omr.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff     12051137 Feb  6 04:47 patients.csv
--rw-r--r--@ 1 xuzhiwei  staff      2835586 Apr 13  2024 patients.csv.gz
--rwx------@ 1 xuzhiwei  staff    525708076 Apr 13  2024 pharmacy.csv.gz
--rw-r--r--  1 xuzhiwei  staff     55267894 Apr 13  2024 poe_detail.csv.gz
--rw-r--r--  1 xuzhiwei  staff    666594177 Apr 13  2024 poe.csv.gz
--rw-r--r--  1 xuzhiwei  staff    606298611 Apr 13  2024 prescriptions.csv.gz
--rw-r--r--  1 xuzhiwei  staff      7777324 Apr 13  2024 procedures_icd.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff       127330 Apr 13  2024 provider.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff      8569241 Apr 13  2024 services.csv.gz
--rw-r--r--  1 xuzhiwei  staff     46185771 Oct  3  2024 transfers.csv.gz</code></pre>
+<pre><code>total 12306256
+-rw-r--r--  1 xuzhiwei  staff    19928140 Jun 24  2024 admissions.csv.gz
+-rw-r--r--  1 xuzhiwei  staff      427554 Apr 13  2024 d_hcpcs.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff      876360 Apr 13  2024 d_icd_diagnoses.csv.gz
+-rw-r--r--  1 xuzhiwei  staff      589186 Apr 13  2024 d_icd_procedures.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff       13169 Oct  3  2024 d_labitems.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff    33564802 Oct  3  2024 diagnoses_icd.csv.gz
+-rw-r--r--  1 xuzhiwei  staff     9743908 Oct  3  2024 drgcodes.csv.gz
+-rwx------@ 1 xuzhiwei  staff   748158322 Apr 13  2024 emar_detail.csv.gz
+-rw-r--r--  1 xuzhiwei  staff   811305629 Apr 13  2024 emar.csv.gz
+-rw-r--r--  1 xuzhiwei  staff     2162335 Apr 13  2024 hcpcsevents.csv.gz
+-rw-r--r--  1 xuzhiwei  staff        2907 Jan 22 00:09 index.html
+-rw-r--r--@ 1 xuzhiwei  staff  2592909134 Oct  3  2024 labevents.csv.gz
+-rw-r--r--  1 xuzhiwei  staff   117644075 Oct  3  2024 microbiologyevents.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff    44069351 Oct  3  2024 omr.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff     2835586 Apr 13  2024 patients.csv.gz
+-rwx------@ 1 xuzhiwei  staff   525708076 Apr 13  2024 pharmacy.csv.gz
+-rw-r--r--  1 xuzhiwei  staff    55267894 Apr 13  2024 poe_detail.csv.gz
+-rw-r--r--  1 xuzhiwei  staff   666594177 Apr 13  2024 poe.csv.gz
+-rw-r--r--  1 xuzhiwei  staff   606298611 Apr 13  2024 prescriptions.csv.gz
+-rw-r--r--  1 xuzhiwei  staff     7777324 Apr 13  2024 procedures_icd.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff      127330 Apr 13  2024 provider.csv.gz
+-rw-r--r--@ 1 xuzhiwei  staff     8569241 Apr 13  2024 services.csv.gz
+-rw-r--r--  1 xuzhiwei  staff    46185771 Oct  3  2024 transfers.csv.gz</code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> ~/mimic/icu</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>total 8507528
+<pre><code>total 8506792
 -rw-r--r--  1 xuzhiwei  staff       41566 Apr 13  2024 caregiver.csv.gz
 -rwx------@ 1 xuzhiwei  staff  3502392765 Apr 13  2024 chartevents.csv.gz
--rw-r--r--@ 1 xuzhiwei  staff      375225 Feb  6 22:23 d_items.csv
 -rw-r--r--@ 1 xuzhiwei  staff       58741 Apr 13  2024 d_items.csv.gz
 -rw-r--r--  1 xuzhiwei  staff    63481196 Apr 13  2024 datetimeevents.csv.gz
 -rw-r--r--  1 xuzhiwei  staff     3342355 Oct  3  2024 icustays.csv.gz
@@ -2490,7 +2484,7 @@ Freeram:   98.156 MiB </code></pre>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>r_baseline_time</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  4.524   0.081   4.617 </code></pre>
+  4.642   0.088   4.747 </code></pre>
 </div>
 </div>
 <p>Tidyverse</p>
@@ -2504,7 +2498,7 @@ Freeram:   98.156 MiB </code></pre>
 <span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>t_baseline_time</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.734   0.108   0.446 </code></pre>
+  0.752   0.129   0.467 </code></pre>
 </div>
 </div>
 <p>Data.table</p>
@@ -2515,7 +2509,7 @@ Freeram:   98.156 MiB </code></pre>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>f_baseline_time</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.627   0.035   0.256 </code></pre>
+  0.633   0.036   0.248 </code></pre>
 </div>
 </div>
 <p><strong>solutins</strong>: The fastest function for reading the <code>admissions.csv.gz</code> file is <code>fread</code> from the data.table package, followed by <code>read_csv</code> from tidyverse, and then <code>read.csv</code> from base R.</p>
@@ -2693,15 +2687,15 @@ Freeram:   98.156 MiB </code></pre>
 <span id="cb56-26"><a href="#cb56-26" aria-hidden="true" tabindex="-1"></a>t_typed_time</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.602   0.090   0.292 </code></pre>
+  0.617   0.100   0.296 </code></pre>
 </div>
 </div>
 <p>Does the run time change?</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;baseline_time: &quot;</span>,t_baseline_time[<span class="st">&quot;elapsed&quot;</span>], <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;typed_time: &quot;</span>, t_typed_time[<span class="st">&quot;elapsed&quot;</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>baseline_time:  0.446 
- typed_time:  0.292</code></pre>
+<pre><code>baseline_time:  0.467 
+ typed_time:  0.296</code></pre>
 </div>
 </div>
 <p><strong>solution:</strong> The run time after indicating appropriate column data types in <code>read_csv</code> is reduced compared to the default behavior. This is because when you specify the column data types, <code>read_csv</code> can optimize the parsing process and avoid the overhead of guessing the data types for each column, which can be time-consuming for large files.</p>
@@ -2847,7 +2841,7 @@ dttm (1): charttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.191   1.056   2.869 </code></pre>
+ 10.034   2.384   5.073 </code></pre>
 </div>
 </div>
 </section>
@@ -2876,7 +2870,7 @@ dttm (1): charttime
 <span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 47.743   2.426  46.025 </code></pre>
+ 50.061   3.160  48.812 </code></pre>
 </div>
 </div>
 <p>Display the number of rows and the first 10 rows of the result tibble, and make sure they match those in Q2.3. (Hint: use <code>dplyr</code> verbs for selecting columns and filtering rows.)</p>
@@ -2923,7 +2917,7 @@ dttm (1): charttime
 <span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-sh</span> labevents_parquet</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>total 5358648
--rw-r--r--@ 1 xuzhiwei  staff  2743623701 Feb 11 17:55 part-0.parquet
+-rw-r--r--@ 1 xuzhiwei  staff  2743623701 Feb 12 00:56 part-0.parquet
 2.6G    labevents_parquet</code></pre>
 </div>
 </div>
@@ -2939,7 +2933,7 @@ dttm (1): charttime
 <span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  6.984   2.715   2.588 </code></pre>
+  6.922   3.409   3.833 </code></pre>
 </div>
 </div>
 <p>Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use <code>dplyr</code> verbs for selecting columns and filtering rows.)</p>
@@ -2983,7 +2977,7 @@ dttm (1): charttime
 <span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.735   0.475   0.959 </code></pre>
+  0.798   1.148   1.796 </code></pre>
 </div>
 </div>
 <p>Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use <code>dplyr</code> verbs for selecting columns and filtering rows.)</p>
@@ -3080,7 +3074,7 @@ dttm (1): charttime
 <p>Ingest+select+filter process and also check how long does it take?</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>icu_items <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>  <span class="dv">220405</span>, <span class="dv">220181</span>, <span class="dv">220179</span>, <span class="dv">223761</span>, <span class="dv">220210</span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>  <span class="dv">220045</span>, <span class="dv">220181</span>, <span class="dv">220179</span>, <span class="dv">223761</span>, <span class="dv">220210</span></span>
 <span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
 <span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>chartevents_parquet <span class="ot">&lt;-</span></span>
@@ -3091,7 +3085,7 @@ dttm (1): charttime
 <span id="cb108-10"><a href="#cb108-10" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 18.496   6.407   3.971 </code></pre>
+ 18.710   7.038   4.927 </code></pre>
 </div>
 </div>
 <p>Read d_itemid.csv.gz</p>
@@ -3121,17 +3115,17 @@ dttm (1): charttime
  1   10000032 223761 2180-07-23 14:00:00     98.7 Temperature Fahrenheit        
  2   10000032 220179 2180-07-23 14:11:00     84   Non Invasive Blood Pressure s…
  3   10000032 220181 2180-07-23 14:11:00     56   Non Invasive Blood Pressure m…
- 4   10000032 220210 2180-07-23 14:12:00     24   Respiratory Rate              
- 5   10000032 220179 2180-07-23 14:30:00     95   Non Invasive Blood Pressure s…
- 6   10000032 220181 2180-07-23 14:30:00     67   Non Invasive Blood Pressure m…
- 7   10000032 220210 2180-07-23 14:30:00     21   Respiratory Rate              
- 8   10000032 220179 2180-07-23 15:00:00     88   Non Invasive Blood Pressure s…
- 9   10000032 220181 2180-07-23 15:00:00     64   Non Invasive Blood Pressure m…
-10   10000032 220210 2180-07-23 15:00:00     23   Respiratory Rate              </code></pre>
+ 4   10000032 220045 2180-07-23 14:12:00     91   Heart Rate                    
+ 5   10000032 220210 2180-07-23 14:12:00     24   Respiratory Rate              
+ 6   10000032 220045 2180-07-23 14:30:00     93   Heart Rate                    
+ 7   10000032 220179 2180-07-23 14:30:00     95   Non Invasive Blood Pressure s…
+ 8   10000032 220181 2180-07-23 14:30:00     67   Non Invasive Blood Pressure m…
+ 9   10000032 220210 2180-07-23 14:30:00     21   Respiratory Rate              
+10   10000032 220045 2180-07-23 15:00:00     94   Heart Rate                    </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(chartevents_labeled)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 21443357</code></pre>
+<pre><code>[1] 30195426</code></pre>
 </div>
 </div>
 </section>
