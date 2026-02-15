@@ -1,0 +1,290 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>HW2</title>
+  <style type="text/css">
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<div id="header">
+<h1 class="title">HW2</h1>
+</div>
+<p><em>Chih Wei Hsu</em></p>
+<h3 id="overall-grade-197200">Overall Grade: 197/200</h3>
+<h3 id="quality-of-report-1010">Quality of report: 10/10</h3>
+<ul>
+<li>Is the homework submitted (git tag time) before deadline?<br />
+</li>
+<li>Is the final report in a human readable format (html, pdf)?<br />
+</li>
+<li>Is the report prepared as a dynamic document (Quarto) for better
+reproducibility?<br />
+</li>
+<li>Is the report clear (whole sentences, typos, grammar)? Do readers
+have a clear idea what’s going on and how results are produced by just
+reading the report?</li>
+</ul>
+<h3
+id="completeness-correctness-and-efficiency-of-solution-145150">Completeness,
+correctness and efficiency of solution: 145/150</h3>
+<ul>
+<li><p>Q1 (20/20)</p>
+<ul>
+<li>Q1.1 (10/10): All three methods benchmarked with
+<code>system.time</code> and <code>pryr::object_size</code>. Uses
+<code>str()</code> to compare parsed data types across all three.
+Identifies <code>fread</code> as fastest. Memory comparison
+discussed.</li>
+<li>Q1.2 (10/10): Inspects column names with
+<code>zcat | head -2 | tr ',' '\n' | nl</code> (nice technique). Uses
+<code>col_factor()</code> for categoricals, <code>col_integer()</code>
+for IDs, <code>col_datetime()</code> for timestamps. Reports
+<code>object_size()</code> under 50 MB.</li>
+</ul></li>
+<li><p>Q2 (77/80)</p>
+<ul>
+<li>Q2.1 (10/10): Reports &gt; 3 min, out of memory. Good
+explanation.</li>
+<li>Q2.2 (10/10): Uses <code>col_select</code> with 4 columns. Reports
+it solves memory issue but still slow.</li>
+<li>Q2.3 (15/15): Bash awk with shell variable passing
+(<code>-v items="$ITEMS"</code>), <code>split()</code> to populate
+<code>keep[]</code> array. Filters on <code>$5</code> (itemid). Prints
+<code>$2,$5,$7,$10</code>. All 9 lab item IDs. First 10 lines displayed.
+Row count via <code>wc -l</code>. <code>read_csv</code> timing
+shown.</li>
+<li>Q2.4 (15/15): Correct decompression via <code>gzip -d -c</code>.
+Opens <code>labevents.csv</code> with <code>open_dataset()</code>.
+Correct select/filter/collect. <code>arrange()</code> and
+<code>head(10)</code> displayed separately. 33,712,352 rows
+(<code>nrow</code>). Arrow explanation provided.</li>
+<li>Q2.5 (15/15): Writes Parquet via <code>write_dataset()</code>.
+Reports ~2.6 GB via <code>du -sh</code>. Correct select/filter/collect
+pipeline. <code>arrange()</code> and <code>head(10)</code> displayed.
+33,712,352 rows. Parquet explanation provided.</li>
+<li>Q2.6 (12/15): Pipes the already-collected
+<code>labevents_parquet</code> tibble (from Q2.5) through
+<code>select |&gt; filter |&gt; arrow::to_duckdb() |&gt; collect()</code>.
+Since <code>labevents_parquet</code> was already
+<code>collect()</code>ed into an R tibble in Q2.5, this does not
+demonstrate DuckDB ingesting from Parquet files. The correct approach
+would be
+<code>open_dataset("./labevents_parquet", format = "parquet") |&gt; to_duckdb() |&gt; select() |&gt; filter() |&gt; collect()</code>.
+(-3)</li>
+</ul></li>
+<li><p>Q3 (30/30): Decompresses chartevents.csv.gz, writes to Parquet
+via <code>write_dataset()</code>. Opens Parquet with
+<code>open_dataset()</code>, selects
+subject_id/itemid/charttime/valuenum, filters for 5 vital IDs.
+Additionally joins with <code>d_items.csv.gz</code> to add label column
+(nice touch). Row count and first 10 rows with <code>arrange()</code>
+displayed. Well-structured multi-step approach.</p></li>
+<li><p>Q4 (20/20): Reports using ChatGPT/GPT-5.2 and GitHub Copilot.
+Five instances of AI errors described (incorrect memory/speed answers,
+misleading memory advice, wrong suggestion for zless, generating code
+for wrong question, awk exceeding line limits).</p></li>
+</ul>
+<h3 id="usage-of-git-1010">Usage of Git: 10/10</h3>
+<ul>
+<li>Are branches (<code>main</code> and <code>develop</code>) correctly
+set up? Is the hw submission put into the <code>main</code>
+branch?<br />
+</li>
+<li>Are there enough commits (&gt;=5) in develop branch? Are commit
+messages clear?<br />
+</li>
+<li>Is the hw2 submission tagged?<br />
+</li>
+<li>Are the folders (<code>hw1</code>, <code>hw2</code>, …) created
+correctly?<br />
+</li>
+<li>Do not put auxiliary and big data files into version control.</li>
+</ul>
+<h3 id="reproducibility-1010">Reproducibility: 10/10</h3>
+<ul>
+<li>Are the materials (files and instructions) submitted to the
+<code>main</code> branch sufficient for reproducing all the
+results?<br />
+</li>
+<li>If necessary, are there clear instructions how to reproduce the
+results?</li>
+</ul>
+<h3 id="r-code-style-2020">R code style: 20/20</h3>
+<ul>
+<li><a
+href="https://style.tidyverse.org/syntax.html#long-function-calls">Rule
+2.6</a> The maximum line length is 80 characters. No violations
+found.</li>
+<li><a href="https://style.tidyverse.org/syntax.html#indenting">Rule
+2.5.1</a> When indenting your code, use two spaces. No violations
+found.</li>
+<li><a
+href="https://style.tidyverse.org/syntax.html#infix-operators">Rule
+2.2.4</a> Place spaces around all infix operators. No violations
+found.</li>
+<li><a href="https://style.tidyverse.org/syntax.html#commas">Rule
+2.2.1</a> Do not place a space before a comma, but always place one
+after a comma. No violations found.</li>
+<li><a href="https://style.tidyverse.org/syntax.html#parentheses">Rule
+2.2.2</a> Do not place spaces around code in parentheses or square
+brackets. No violations found.</li>
+</ul>
+<p>Strong submission with clean code style. Creative use of shell
+variable passing in awk and d_items join in Q3.</p>
+</body>
+</html>
