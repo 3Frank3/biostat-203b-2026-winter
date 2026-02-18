@@ -26,6 +26,7 @@ library(memuse)
 library(pryr)
 library(R.utils)
 library(tidyverse)
+library(lubridate)
 ```
 
 Display your machine memory.
@@ -47,17 +48,113 @@ Do a similar visualization for the patient with `subject_id` 10063848 using ggpl
 
 Hint: We need to pull information from data files `patients.csv.gz`, `admissions.csv.gz`, `transfers.csv.gz`, `labevents.csv.gz`, `procedures_icd.csv.gz`, `diagnoses_icd.csv.gz`, `d_icd_procedures.csv.gz`, and `d_icd_diagnoses.csv.gz`. For the big file `labevents.csv.gz`, use the Parquet format you generated in Homework 2. For reproducibility, make the Parquet folder `labevents_pq` available at the current working directory `hw3`, for example, by a symbolic link. Make your code reproducible.
 
+```{bash}
+
+zcat < ~/mimic/hosp/patients.csv.gz | head -5
+```
+
+```{r}
+# 1. Load Data
+subj_id <- 10063848
+
+patients <- read_csv("~/mimic/hosp/patients.csv.gz") |>
+  filter(subject_id == subj_id)
+admissions <- read_csv("~/mimic/hosp/admissions.csv.gz") |> 
+  filter(subject_id == subj_id)
+transfers <- read_csv("~/mimic/hosp/transfers.csv.gz") |> 
+  filter(subject_id == subj_id)
+diag <- read_csv("~/mimic/hosp/diagnoses_icd.csv.gz") |>
+  filter(subject_id == subj_id)
+d_diag <- read_csv("~/mimic/hosp/d_icd_diagnoses.csv.gz")
+proc <- read_csv("~/mimic/hosp/procedures_icd.csv.gz") |>
+  filter(subject_id == subj_id)
+d_proc <- read_csv("~/mimic/hosp/d_icd_procedures.csv.gz")
+
+# Load labevents from Parquet 
+labs <- open_dataset("../HW2/labevents_parquet", format = "parquet") |>
+  select(subject_id, charttime) |>
+  filter(subject_id == subj_id) |>
+  collect()
+```
+```{r}
+# Get unique race from admissions
+patient_race <- admissions |>
+  distinct(race) |>
+  pull(race) |>
+  first() 
+
+# Title Info
+patient_info <- patients |> 
+  mutate(desc = paste0(
+    "Patient ", subject_id, ", ", gender, ", ", 
+    anchor_age, " years old", ", ", tolower(patient_race))) |>
+  pull(desc)
+
+# Top 3 Diagnoses
+top_3_diag <- diag |>
+  slice_head(n=3) |>  
+  left_join(d_diag, by = c("icd_code", "icd_version")) |>
+  pull(long_title) |>
+  paste(collapse = "\n")
+
+y_levels <- c("Procedure", "Lab", "ADT")
+
+# ADT
+adt_plot <- transfers |>
+  filter(!is.na(careunit)) |>
+  mutate(
+    line_weight = if_else(str_detect(careunit, "ICU|CCU"), 5, 1.5),
+    y_label = factor("ADT", levels = y_levels)
+  )
+# Lab
+lab_pot <- labs |>
+  mutate(y_label = factor("Lab", levels = y_levels))
+
+# Procedure 
+proc_plot <- proc |>
+  left_join(d_proc, by = c("icd_code", "icd_version")) |>
+  mutate(
+    y_label = factor("Procedure", levels = y_levels),
+    long_title_wrapped = str_wrap(long_title, width = 30)
+    )
+  
+
+```
+
+
+Visualization
 ```{r}
 ggplot() +
-  geom_segment(...) + # ADT history
-  geom_point(...) + # lab events
-  geom_point(...) + # procedure events
-  facet_grid(...) + # facet by vital and stay ID
-  labs(title = ..., subtitle = ...) + # title and subtitle
-  theme_bw()+
-  coord_flip()
-
-
+  # ADT
+  geom_segment(data = adt_plot, 
+               aes(x = intime, xend = outtime, y = y_label, 
+                   color = careunit, size = line_weight)) +
+  # Procedures
+  geom_point(data = proc_plot, 
+    aes(x = chartdate, y = y_label, shape = long_title), size = 3) + 
+  # Labs (Crosses)
+  geom_point(data = labs, 
+    aes(x = charttime, y = "Lab"), shape = 3) +
+  # Aesthetics
+  scale_size_identity() +
+  labs(
+    title = patient_info,
+    subtitle = top_3_diag,
+    x = "Calendar Time",
+    y = NULL,
+    color = "Care Unit",
+    shape = "Procedure"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom", 
+    legend.box = "vertical",
+    legend.text = element_text(size = 8),
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(face = "bold", size = 10)
+  )+
+  scale_y_discrete(drop = FALSE) +
+  guides(shape = guide_legend(ncol = 2, byrow = TRUE))
 ```
 ### Q1.2 ICU stays
 
