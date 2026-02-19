@@ -49,26 +49,34 @@ Do a similar visualization for the patient with `subject_id` 10063848 using ggpl
 Hint: We need to pull information from data files `patients.csv.gz`, `admissions.csv.gz`, `transfers.csv.gz`, `labevents.csv.gz`, `procedures_icd.csv.gz`, `diagnoses_icd.csv.gz`, `d_icd_procedures.csv.gz`, and `d_icd_diagnoses.csv.gz`. For the big file `labevents.csv.gz`, use the Parquet format you generated in Homework 2. For reproducibility, make the Parquet folder `labevents_pq` available at the current working directory `hw3`, for example, by a symbolic link. Make your code reproducible.
 
 ```{bash}
-
 zcat < ~/mimic/hosp/patients.csv.gz | head -5
 ```
-
 ```{r}
-# 1. Load Data
 subj_id <- 10063848
+```
+Load Data
+```{r}
+path <- "~/mimic/hosp"
 
-patients <- read_csv("~/mimic/hosp/patients.csv.gz") |>
+patients <- read_csv(file.path(path, "patients.csv.gz"), 
+  show_col_types = FALSE) |>
   filter(subject_id == subj_id)
-admissions <- read_csv("~/mimic/hosp/admissions.csv.gz") |> 
+admissions <- read_csv(file.path(path, "admissions.csv.gz"), 
+  show_col_types = FALSE) |> 
   filter(subject_id == subj_id)
-transfers <- read_csv("~/mimic/hosp/transfers.csv.gz") |> 
+transfers <- read_csv(file.path(path, "transfers.csv.gz"), 
+  show_col_types = FALSE) |> 
   filter(subject_id == subj_id)
-diag <- read_csv("~/mimic/hosp/diagnoses_icd.csv.gz") |>
+diag <- read_csv(file.path(path, "diagnoses_icd.csv.gz"), 
+  show_col_types = FALSE) |>
   filter(subject_id == subj_id)
-d_diag <- read_csv("~/mimic/hosp/d_icd_diagnoses.csv.gz")
-proc <- read_csv("~/mimic/hosp/procedures_icd.csv.gz") |>
+d_diag <- read_csv(file.path(path, "d_icd_diagnoses.csv.gz"),
+  show_col_types = FALSE)
+proc <- read_csv(file.path(path, "procedures_icd.csv.gz"),
+  show_col_types = FALSE) |>
   filter(subject_id == subj_id)
-d_proc <- read_csv("~/mimic/hosp/d_icd_procedures.csv.gz")
+d_proc <- read_csv(file.path(path, "d_icd_procedures.csv.gz"),
+  show_col_types = FALSE)
 
 # Load labevents from Parquet 
 labs <- open_dataset("../HW2/labevents_parquet", format = "parquet") |>
@@ -76,6 +84,7 @@ labs <- open_dataset("../HW2/labevents_parquet", format = "parquet") |>
   filter(subject_id == subj_id) |>
   collect()
 ```
+
 ```{r}
 # Get unique race from admissions
 patient_race <- admissions |>
@@ -118,7 +127,6 @@ proc_plot <- proc |>
     long_title_wrapped = str_wrap(long_title, width = 30)
     )
   
-
 ```
 
 
@@ -160,10 +168,75 @@ ggplot() +
 
 ICU stays are a subset of ADT history. This figure shows the vitals of the patient `10001217` during ICU stays. The x-axis is the calendar time, and the y-axis is the value of the vital. The color of the line represents the type of vital. The facet grid shows the abbreviation of the vital and the stay ID.
 
-![](10001217_icu.png)
 
 Do a similar visualization for the patient `10063848`.
 
+```{r}
+data_path <- "~/mimic/icu"
+vitals_map <- tibble(
+  itemid = c(220045, 220180, 220179, 220210, 223761),
+  vital_name = c("HR", "NBPd", "NBPs", "RR", "Temperature F")
+)
+```
+
+```{bash}
+zcat < ~/mimic/icu/chartevents.csv.gz | head -4
+```
+```{bash}
+zcat < ~/mimic/icu/icustays.csv.gz | head -4
+```
+Load and Filter Data
+```{r}
+# Load ICU stays to get intime/outtime windows
+icustays <- read_csv(
+  file.path(data_path, "icustays.csv.gz"), show_col_types = FALSE) |>
+  filter(subject_id == subj_id) |>
+  mutate(
+    intime = as.POSIXct(intime) |> with_tz("UTC"),
+    outtime = as.POSIXct(outtime) |> with_tz("UTC")
+  ) |>
+  select(subject_id, stay_id, intime, outtime)
+
+vitals <- open_dataset(
+  "../HW2/chartevents_parquet", format = "parquet") |>
+  filter(subject_id == subj_id, itemid %in% vitals_map$itemid) |>
+  collect() |>
+  select(-any_of("stay_id")) |>
+  mutate(
+    charttime = as.POSIXct(charttime) |> 
+      with_tz(tzone = "UTC")
+  ) |>
+  inner_join(icustays, by = "subject_id", relationship = "many-to-many") |>
+  filter(charttime >= intime, charttime <= outtime) |>
+  left_join(vitals_map, by = "itemid") |>
+  mutate(vital_name = factor(
+    vital_name, levels = vitals_map$vital_name)
+    )
+```
+Visualization
+```{r}
+ggplot(vitals, aes(x = charttime, y = valuenum, color = vital_name)) +
+  geom_line() +
+  geom_point(size = 1) +
+  facet_grid(vital_name ~ stay_id, scales = "free") +
+  scale_color_brewer(palette = "Set1") +
+  scale_x_datetime(
+    guide = guide_axis(n.dodge = 2)) +
+  labs(
+    title = paste("Patient", subj_id, "ICU stays - Vitals"),
+    x = "Calendar Time",
+    y = "Value"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "none",
+    strip.text.y = element_text(angle = -90),
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    strip.background = element_rect(fill = "lightgrey"),
+    strip.text.x = element_text(size = 10, face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
 ## Q2. ICU stays
 
 `icustays.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/icustays/>) contains data about Intensive Care Units (ICU) stays. The first 10 lines are
@@ -286,3 +359,7 @@ Summarize the following information about the ICU stay cohort `mimic_icu_cohort`
 Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity? 
 
 Give 5 instances where AI model gave incorrect or misleading answers. You can use screenshots or copy-paste the Q&A.
+
+1. In Q1.2,  Error in `combine_vars()`:
+! At least one layer must contain all faceting variables: `stay_id`
+✖ Plot is missing `stay_id`
