@@ -332,7 +332,7 @@ The distribution is right-skewed. Most patients are admitted once, while a small
 admissions_htble <- admissions_tble |>
   mutate(admit_hour = hour(admittime))
 
-ggplot(admissions_tble, aes(x = admit_hour)) +
+ggplot(admissions_htble, aes(x = admit_hour)) +
   geom_histogram(binwidth = 1, fill = "darkorange", color = "white") +
   labs(
     title = "Admission Hour Distribution",
@@ -574,7 +574,7 @@ name_map <- setNames(
 )
 
 t <- system.time({
-  chartevents_tble <- open_dataset("../HW2/chartevents_parquet") |>
+  chartevents_tble <- open_dataset("chartevents_pq") |>
     to_duckdb() |>
     select(subject_id, stay_id, itemid, charttime, storetime, valuenum) |>
     filter(itemid %in% local(chartitem_itemid$itemid)) |>
@@ -614,8 +614,39 @@ Let us create a tibble `mimic_icu_cohort` for all ICU stays, where rows are all 
 - the first vital measurements during the ICU stay in `chartevents_tble`
 
 The final `mimic_icu_cohort` should have one row per ICU stay and columns for each variable.
+```{r}
+icu_adult <- icustays_tble |>
+  left_join(
+    select(patients_tble, subject_id, anchor_age, anchor_year),
+    by = "subject_id"
+  ) |>
+  mutate(
+    age_intime = anchor_age + (year(intime) - anchor_year)
+  ) |>
+  filter(age_intime >= 18)
+```
 
-![](mimic_icu_cohort.png)
+```{r}
+mimic_core <- icu_adult |>
+  left_join(
+    admissions_tble,
+    by = "hadm_id",
+    suffix = c("", "_adm")
+  ) |>
+  left_join(
+    patients_tble,
+    by = "subject_id",
+    suffix = c("", "_pt")
+  )
+```
+
+```{r}
+mimic_icu_cohort <- mimic_core |>
+  left_join(labevents_tble,   by = "stay_id") |>
+  left_join(chartevents_tble, by = "stay_id")
+
+print(mimic_icu_cohort, width = Inf)
+```
 
 ## Q8. Exploratory data analysis (EDA)
 
