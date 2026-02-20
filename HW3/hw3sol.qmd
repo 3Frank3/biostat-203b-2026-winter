@@ -464,37 +464,70 @@ We are interested in the lab measurements of albumin (50862), creatinine (50912)
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
 
 ```{r}
+library(arrow)
+library(dplyr)
+library(tidyr)
 
+
+# 1) target itemids
 lab_items <- c(
-  50862, 50912, 50971, 50983, 50902,
-  50882, 51221, 51301, 50931
+  50862, 50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931
+  )
+
+lab_name <- c(
+  albumin     = "50862",
+  creatinine  = "50912",
+  potassium   = "50971",
+  sodium      = "50983",
+  chloride    = "50902",
+  bicarbonate = "50882",
+  hematocrit  = "51221",
+  wbc         = "51301",
+  glucose     = "50931"
 )
 
-# ICU keys (stay_id is unique for ICU stay)
-icu_tbl <- arrow_table(
-  icustays_tble |>
-    transmute(subject_id, hadm_id, stay_id, intime)
-)
+# 2) ICU reference table (keep only needed keys)
+# IMPORTANT: make join keys consistent types (avoid int64 vs double)
+icu_rtbl <- icustays_tble |>
+  transmute(
+    subject_id = as.integer(subject_id),
+    hadm_id    = as.integer(hadm_id),
+    stay_id,
+    intime
+  ) |>
+  arrow_table()
 
-# 1) Arrow: restrict hard, then collect
-labs_pre <- open_dataset("../HW2/labevents_parquet", format = "parquet") |>
-  select(subject_id, hadm_id, itemid, storetime, valuenum) |>
+# 3) Arrow pipeline: filter labs + join ICU + keep pre-ICU + last storetime
+labs_last <- open_dataset("labevents_pq", format = "parquet") |>
+  transmute(
+    subject_id = as.integer(subject_id),
+    hadm_id    = as.integer(hadm_id),
+    itemid     = as.integer(itemid),
+    storetime,
+    valuenum
+  ) |>
   filter(itemid %in% lab_items) |>
-  inner_join(icu_tbl, by = c("subject_id", "hadm_id")) |>
+  inner_join(icu_rtbl, by = c("subject_id", "hadm_id")) |>
+    mutate(
+    storetime = arrow::cast(storetime, arrow::timestamp(unit = "us", timezone = "UTC")),
+    intime    = arrow::cast(intime,    arrow::timestamp(unit = "us", timezone = "UTC"))
+  ) |>
   filter(storetime <= intime) |>
+  arrange(stay_id, itemid, desc(storetime)) |>
+  distinct(stay_id, itemid, .keep_all = TRUE) |>
   collect()
 
-# 2) R: last available measurement by storetime before ICU intime
-labs_last <- labs_pre |>
-  group_by(stay_id, itemid) |>
-  slice_max(order_by = storetime, n = 1, with_ties = FALSE) |>
-  ungroup()
+id_to_name <- setNames(names(lab_name), lab_name)  # "50882" -> "bicarbonate"
 
-# 3) Wide: one row per ICU stay, one column per lab item
 labevents_tble <- labs_last |>
-  select(stay_id, itemid, valuenum) |>
-  mutate(itemid = as.character(itemid)) |>
-  pivot_wider(names_from = itemid, values_from = valuenum)
+  transmute(stay_id, itemid = as.character(itemid), valuenum) |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  arrange(stay_id)
+
+id_cols <- intersect(names(id_to_name), names(labevents_tble))
+
+labevents_tble <- labevents_tble |>
+  rename_with(~ id_to_name[.x], .cols = all_of(id_cols))
 
 labevents_tble
 ```
@@ -513,9 +546,62 @@ zcat < ~/mimic/icu/d_items.csv.gz | head -10
 
 We are interested in the vitals for ICU patients: heart rate (220045), systolic non-invasive blood pressure (220179), diastolic non-invasive blood pressure (220180), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items for the patients in `icustays_tble`. Further restrict to the first vital measurement (by `storetime`) within the ICU stay. The final `chartevents_tble` should have one row per ICU stay and columns for each vital measurement. 
 
-![](chartevents_tble.png)
 
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `chartevents_pq` folder available at the current working directory, for example, by a symbolic link.
+
+**Solution**
+```{r}
+dchartitems_tble <- 
+  read_csv('~/mimic/icu/d_items.csv.gz', show_col_types = FALSE) |>
+  print(width = Inf)
+```
+
+```{r}
+chartitem_itemid <- dchartitems_tble |>
+  filter(itemid %in% c(
+    220045, 
+    220179, 
+    220180, 
+    223761, 
+    220210
+    )) |>
+  print(width = Inf)
+```
+```{r}
+name_map <- setNames(
+  as.character(chartitem_itemid$itemid),  # 這是舊欄名
+  str_to_lower(str_replace_all(chartitem_itemid$label, " ", "_"))  # 新欄名
+)
+
+t <- system.time({
+  chartevents_tble <- open_dataset("../HW2/chartevents_parquet") |>
+    to_duckdb() |>
+    select(subject_id, stay_id, itemid, charttime, storetime, valuenum) |>
+    filter(itemid %in% local(chartitem_itemid$itemid)) |>
+    left_join(select(icustays_tble, stay_id, intime, outtime),
+              by = "stay_id", copy = TRUE) |>
+    filter(storetime >= intime, storetime <= outtime) |>
+    group_by(subject_id, stay_id, itemid) |>
+    slice_min(storetime, n = 1, with_ties = TRUE, na_rm = TRUE) |>
+    summarise(valuenum = mean(valuenum, na.rm = TRUE), .groups = "drop") |>
+    pivot_wider(names_from = itemid, values_from = valuenum) |>
+    collect()
+
+chartevents_tble <- chartevents_tble |>
+  rename_with(
+    ~ str_to_lower(str_replace_all(
+        chartitem_itemid$label[
+          match(.x, chartitem_itemid$itemid)
+        ],
+        " ", "_"
+      )),
+    .cols = intersect(names(chartevents_tble),
+                      as.character(chartitem_itemid$itemid))
+  )
+})
+
+print(chartevents_tble, width = Inf)
+```
 
 ## Q7. Putting things together
 
