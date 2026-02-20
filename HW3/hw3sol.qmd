@@ -63,7 +63,8 @@ patients <- read_csv(file.path(path, "patients.csv.gz"),
   filter(subject_id == subj_id)
 admissions <- read_csv(file.path(path, "admissions.csv.gz"), 
   show_col_types = FALSE) |> 
-  filter(subject_id == subj_id)
+  filter(subject_id == subj_id) |>
+  print(width = Inf)
 transfers <- read_csv(file.path(path, "transfers.csv.gz"), 
   show_col_types = FALSE) |> 
   filter(subject_id == subj_id)
@@ -241,36 +242,146 @@ ggplot(vitals, aes(x = charttime, y = valuenum, color = vital_name)) +
 
 `icustays.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/icustays/>) contains data about Intensive Care Units (ICU) stays. The first 10 lines are
 ```{bash}
-zcat < ~/mimic/icu/icustays.csv.gz | head
+zcat < ~/mimic/icu/icustays.csv.gz | head -10
 ```
 
 ### Q2.1 Ingestion
 
-Import `icustays.csv.gz` as a tibble `icustays_tble`. 
+Import `icustays.csv.gz` as a tibble `icustays_tble`.
+```{r}
+icustays_tble <- as_tibble(
+  read_csv(file.path(data_path, "icustays.csv.gz"))
+)
+icustays_tble
+```
 
 ### Q2.2 Summary and visualization
 
-How many unique `subject_id`? Can a `subject_id` have multiple ICU stays? Summarize the number of ICU stays per `subject_id` by graphs. 
+How many unique `subject_id`? 
+```{r}
+unique_subjects<- distinct(icustays_tble, subject_id) |>
+  count()
+unique_subjects
+```
+Can a `subject_id` have multiple ICU stays? 
+```{r}
+stays_summary <- icustays_tble |> 
+  group_by(subject_id) |> 
+  summarize(n_stays = n()) |> 
+  ungroup()
+
+any(stays_summary$n_stays > 1)
+```
+Summarize the number of ICU stays per `subject_id` by graphs. 
+```{r}
+ggplot(stays_summary, aes(x = n_stays)) +
+  geom_bar(fill = "steelblue", color = "white") +
+  scale_x_continuous(breaks = seq(1, max(stays_summary$n_stays), by = 1)) +
+  labs(
+    title = "Distribution of ICU Stays per Patient",
+    subtitle = paste("Total Unique Patients:", unique_subjects),
+    x = "Number of ICU Stays",
+    y = "Number of Patients"
+  ) +
+  theme_minimal() 
+```
 
 ## Q3. `admissions` data
 
 Information of the patients admitted into hospital is available in `admissions.csv.gz`. See <https://mimic.mit.edu/docs/iv/modules/hosp/admissions/> for details of each field in this file. The first 10 lines are
 ```{bash}
-zcat < ~/mimic/hosp/admissions.csv.gz | head
+zcat < ~/mimic/hosp/admissions.csv.gz | head -10
 ```
 
 ### Q3.1 Ingestion
 
 Import `admissions.csv.gz` as a tibble `admissions_tble`.
 
+```{r}
+admissions_tble <- as_tibble(
+  read_csv('~/mimic/hosp/admissions.csv.gz')
+)
+admissions_tble
+
+```
+
 ### Q3.2 Summary and visualization
 
 Summarize the following information by graphics and explain any patterns you see.
 
-- number of admissions per patient  
+- number of admissions per patient
+```{r}
+adm_per_patient <- admissions_tble |>
+  count(subject_id, name = "n_admissions")
+
+ggplot(adm_per_patient, aes(x = n_admissions)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(
+    title = "Number of Admissions per Patient",
+    x = "Number of Admissions",
+    y = "Number of Patients"
+  ) +
+  theme_bw()
+```
+**solutions:**
+The distribution is right-skewed. Most patients are admitted once, while a small proportion have multiple readmissions, suggesting a subset of chronically ill or high-risk patients.
+
+
 - admission hour (anything unusual?)  
+```{r}
+admissions_htble <- admissions_tble |>
+  mutate(admit_hour = hour(admittime))
+
+ggplot(admissions_tble, aes(x = admit_hour)) +
+  geom_histogram(binwidth = 1, fill = "darkorange", color = "white") +
+  labs(
+    title = "Admission Hour Distribution",
+    x = "Hour of Day",
+    y = "Number of Admissions"
+  ) +
+  theme_bw()
+
+```
+**solutions:**
+Admissions tend to occur more frequently during daytime hours, possibly reflecting scheduled procedures and clinic referrals. A smaller peak around midnight may reflect administrative timestamping practices.
+
 - admission minute (anything unusual?)  
+```{r}
+admissions_mtble <- admissions_tble |>
+  mutate(admit_minute = minute(admittime))
+
+ggplot(admissions_mtble, aes(x = admit_minute)) +
+  geom_histogram(binwidth = 1, fill = "purple", color = "white") +
+  labs(
+    title = "Admission Minute Distribution",
+    x = "Minute",
+    y = "Number of Admissions"
+  ) +
+  theme_bw()
+```
+**solutions:**
+A noticeable spike at minute 00, 15, 30, 45 suggests rounding or default timestamp recording. This indicates that admission times may not always reflect exact real-world times, but rather administrative or system-recorded times.
+
 - length of hospital stay (from admission to discharge) (anything unusual?)  
+```{r}
+length_hstay <- admissions_tble |>
+  mutate(
+    los_days = as.numeric(dischtime - admittime, units = "days")
+  )
+
+ggplot(length_hstay, aes(x = los_days)) +
+  geom_histogram(binwidth = 1, fill = "forestgreen", color = "white") +
+  coord_cartesian(xlim = c(0, 30)) +  # zoom to see pattern
+  labs(
+    title = "Length of Hospital Stay (Days)",
+    x = "Length of Stay (Days)",
+    y = "Number of Admissions"
+  ) +
+  theme_bw()
+
+```
+**solutions:**
+The length of stay distribution is heavily right-skewed. Most hospital stays are short (less than one week), while a small number of patients experience prolonged hospitalizations, possibly due to severe illness or complications.
 
 According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/concepts/#date-shifting), 
 
@@ -280,46 +391,124 @@ According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/co
 
 Patient information is available in `patients.csv.gz`. See <https://mimic.mit.edu/docs/iv/modules/hosp/patients/> for details of each field in this file. The first 10 lines are
 ```{bash}
-zcat < ~/mimic/hosp/patients.csv.gz | head
+zcat < ~/mimic/hosp/patients.csv.gz | head -10
 ```
 
 ### Q4.1 Ingestion
 
 Import `patients.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/patients/>) as a tibble `patients_tble`.
 
+```{r}
+patients_tble <- as_tibble(
+  read_csv('~/mimic/hosp/patients.csv.gz')
+)
+patients_tble
+
+```
+
 ### Q4.2 Summary and visualization
 
 Summarize variables `gender` and `anchor_age` by graphics, and explain any patterns you see.
+```{r}
+ggplot(patients_tble, aes(x = gender)) +
+  geom_bar(fill = "steelblue", color = "white") +
+  labs(
+    title = "Gender Distribution",
+    x = "Gender",
+    y = "Number of Patients"
+  ) +
+  theme_bw()
+```
+**solutions:**
+The gender distribution is relatively balanced, though slightly more female patients are observed. This reflects the general ICU population in MIMIC-IV, where female patients are somewhat more prevalent.
+
+```{r}
+ggplot(patients_tble, aes(x = anchor_age)) +
+  geom_histogram(binwidth = 1, fill = "coral", color = "white") +
+  labs(
+    title = "Age Distribution at Admission",
+    x = "Anchor Age",
+    y = "Number of Patients"
+  ) +
+  theme_bw()
+```
+**solutions:**
+The age distribution is concentrated among middle-aged and older adults, particularly between 50 and 70 years. The distribution is slightly right-skewed, with fewer very elderly patients. In MIMIC-IV, patients aged 90 and above are top-coded to 91 for privacy protection, which may create a subtle accumulation at age 91.
+
+```{r}
+ggplot(patients_tble, aes(x = anchor_age, fill = gender)) +
+  geom_histogram(binwidth = 1, alpha = 0.5, position = "identity") +
+  labs(
+    title = "Anchor Age by Gender",
+    x = "Anchor Age",
+    y = "Count"
+  ) +
+  theme_bw()
+```
+
 
 ## Q5. Lab results
 
 `labevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/labevents/>) contains all laboratory measurements for patients. The first 10 lines are
 ```{bash}
-zcat < ~/mimic/hosp/labevents.csv.gz | head
+zcat < ~/mimic/hosp/labevents.csv.gz | head -10
 ```
 
 `d_labitems.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/d_labitems/>) is the dictionary of lab measurements. 
 ```{bash}
-zcat < ~/mimic/hosp/d_labitems.csv.gz | head
+zcat < ~/mimic/hosp/d_labitems.csv.gz | head -10
 ```
 
 We are interested in the lab measurements of albumin (50862), creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), and glucose (50931). Retrieve a subset of `labevents.csv.gz` that only containing these items for the patients in `icustays_tble`. Further restrict to the last available measurement (by `storetime`) before the ICU stay. The final `labevents_tble` should have one row per ICU stay and columns for each lab measurement.
 
-![](labevents_tble.png)
-
-
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
+
+```{r}
+
+lab_items <- c(
+  50862, 50912, 50971, 50983, 50902,
+  50882, 51221, 51301, 50931
+)
+
+# ICU keys (stay_id is unique for ICU stay)
+icu_tbl <- arrow_table(
+  icustays_tble |>
+    transmute(subject_id, hadm_id, stay_id, intime)
+)
+
+# 1) Arrow: restrict hard, then collect
+labs_pre <- open_dataset("../HW2/labevents_parquet", format = "parquet") |>
+  select(subject_id, hadm_id, itemid, storetime, valuenum) |>
+  filter(itemid %in% lab_items) |>
+  inner_join(icu_tbl, by = c("subject_id", "hadm_id")) |>
+  filter(storetime <= intime) |>
+  collect()
+
+# 2) R: last available measurement by storetime before ICU intime
+labs_last <- labs_pre |>
+  group_by(stay_id, itemid) |>
+  slice_max(order_by = storetime, n = 1, with_ties = FALSE) |>
+  ungroup()
+
+# 3) Wide: one row per ICU stay, one column per lab item
+labevents_tble <- labs_last |>
+  select(stay_id, itemid, valuenum) |>
+  mutate(itemid = as.character(itemid)) |>
+  pivot_wider(names_from = itemid, values_from = valuenum)
+
+labevents_tble
+```
 
 ## Q6. Vitals from charted events
 
 `chartevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`. The first 10 lines of `chartevents.csv.gz` are
 ```{bash}
-zcat < ~/mimic/icu/chartevents.csv.gz | head
+zcat < ~/mimic/icu/chartevents.csv.gz | head -10
 ```
 
 `d_items.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/d_items/>) is the dictionary for the `itemid` in `chartevents.csv.gz`. 
 ```{bash}
-zcat < ~/mimic/icu/d_items.csv.gz | head
+zcat < ~/mimic/icu/d_items.csv.gz | head -10
 ```
 
 We are interested in the vitals for ICU patients: heart rate (220045), systolic non-invasive blood pressure (220179), diastolic non-invasive blood pressure (220180), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items for the patients in `icustays_tble`. Further restrict to the first vital measurement (by `storetime`) within the ICU stay. The final `chartevents_tble` should have one row per ICU stay and columns for each vital measurement. 
