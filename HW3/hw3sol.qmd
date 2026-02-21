@@ -652,13 +652,76 @@ print(mimic_icu_cohort, width = Inf)
 
 Summarize the following information about the ICU stay cohort `mimic_icu_cohort` using appropriate numerics or graphs:
 
+**solutions:**
+First check the distribution of `los` (length of ICU stay) to determine appropriate summary statistics and visualizations.
+```{r}
+ggplot(mimic_icu_cohort, aes(x = los)) +
+  geom_histogram(bins = 50) +
+  labs(title = "Distribution of ICU Length of Stay",
+       x = "ICU LOS (days)", y = "Count")
+
+ggplot(mimic_icu_cohort, aes(x = log1p(los))) +
+  geom_histogram(bins = 50) +
+  labs(title = "Log-Transformed ICU LOS",
+       x = "log(1 + LOS)")
+```
 - Length of ICU stay `los` vs demographic variables (race, insurance, marital_status, gender, age at intime)
 
+(A) LOS vs Race / Insurance / Marital Status
+```{r}
+mimic_icu_cohort |>
+  mutate(race = fct_lump(race, n = 5)) |>
+  ggplot(aes(x = race, y = los)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log1p") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+(B) LOS vs Gender
+```{r}
+ggplot(mimic_icu_cohort, aes(x = gender, y = los)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log1p") +
+  labs(title = "ICU LOS by Gender",
+       y = "LOS (log scale)")
+```
+
+(c) LOS vs Age
+
+```{r}
+ggplot(mimic_icu_cohort, aes(x = age_intime, y = los)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "loess") +
+  labs(title = "ICU LOS vs Age",
+       x = "Age at ICU",
+       y = "LOS")
+```
+
 - Length of ICU stay `los` vs the last available lab measurements before ICU stay
+
+```{r}
+ggplot(mimic_icu_cohort, aes(x = creatinine, y = los)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "loess") +
+  labs(title = "LOS vs Pre-ICU Creatinine")
+```
+
+Correlation matrix of `los` and lab measurements
+```{r}
+lab_vars <- c("albumin","creatinine","potassium","sodium",
+              "chloride","bicarbonate","hematocrit",
+              "wbc","glucose")
+
+mimic_icu_cohort |>
+  select(los, all_of(lab_vars)) |>
+  cor(use = "pairwise.complete.obs")
+```
+
 
 - Length of ICU stay `los` vs the first vital measurements within the ICU stay
 
 - Length of ICU stay `los` vs first ICU unit
+
 
 ## Q9. AI assistant
 
