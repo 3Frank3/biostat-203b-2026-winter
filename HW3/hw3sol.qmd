@@ -80,7 +80,7 @@ d_proc <- read_csv(file.path(path, "d_icd_procedures.csv.gz"),
   show_col_types = FALSE)
 
 # Load labevents from Parquet 
-labs <- open_dataset("../HW2/labevents_parquet", format = "parquet") |>
+labs <- open_dataset("labevents_pq", format = "parquet") |>
   select(subject_id, charttime) |>
   filter(subject_id == subj_id) |>
   collect()
@@ -186,6 +186,30 @@ zcat < ~/mimic/icu/chartevents.csv.gz | head -4
 ```{bash}
 zcat < ~/mimic/icu/icustays.csv.gz | head -4
 ```
+I try using professor method.
+```{r}
+open_dataset("chartevents_pq", format = "parquet") |>
+  to_duckdb() |>
+  filter(subject_id == subj_id) |>
+  filter(itemid %in% c(
+    220045, 
+    220179, 
+    220180, 
+    223761, 
+    220210
+  )) |>
+  collect() |>
+  left_join(
+    read_csv("~/mimic/icu/d_items.csv.gz", show_col_types = FALSE), 
+      by = "itemid"
+   ) |>
+  print(width = Inf) |>
+  ggplot(mapping = aes(x = charttime, y = valuenum, color = label)) +
+  geom_line() +
+  geom_point(size = 1) +
+  facet_grid(abbreviation ~ stay_id, scales = "free") 
+
+```
 Load and Filter Data
 ```{r}
 # Load ICU stays to get intime/outtime windows
@@ -199,7 +223,7 @@ icustays <- read_csv(
   select(subject_id, stay_id, intime, outtime)
 
 vitals <- open_dataset(
-  "../HW2/chartevents_parquet", format = "parquet") |>
+  "chartevents_pq", format = "parquet") |>
   filter(subject_id == subj_id, itemid %in% vitals_map$itemid) |>
   collect() |>
   select(-any_of("stay_id")) |>
@@ -272,6 +296,9 @@ stays_summary <- icustays_tble |>
 
 any(stays_summary$n_stays > 1)
 ```
+**solitions:**
+Yes, a `subject_id` can have multiple ICU stays. The `stays_summary` table shows the number of ICU stays for each unique patient. We can see that some patients have more than one ICU stay, indicating that they were admitted to the ICU multiple times during their hospital course.
+
 Summarize the number of ICU stays per `subject_id` by graphs. 
 ```{r}
 ggplot(stays_summary, aes(x = n_stays)) +
@@ -343,7 +370,7 @@ ggplot(admissions_htble, aes(x = admit_hour)) +
 
 ```
 **solutions:**
-Admissions tend to occur more frequently during daytime hours, possibly reflecting scheduled procedures and clinic referrals. A smaller peak around midnight may reflect administrative timestamping practices.
+Admissions tend to occur more frequently during daytime hours, possibly reflecting scheduled procedures and clinic referrals. A smaller peak around midnight may reflect administrative timestamping practices. 
 
 - admission minute (anything unusual?)  
 ```{r}
@@ -487,7 +514,6 @@ lab_name <- c(
 )
 
 # 2) ICU reference table (keep only needed keys)
-# IMPORTANT: make join keys consistent types (avoid int64 vs double)
 icu_rtbl <- icustays_tble |>
   transmute(
     subject_id = as.integer(subject_id),
@@ -569,8 +595,8 @@ chartitem_itemid <- dchartitems_tble |>
 ```
 ```{r}
 name_map <- setNames(
-  as.character(chartitem_itemid$itemid),  # 這是舊欄名
-  str_to_lower(str_replace_all(chartitem_itemid$label, " ", "_"))  # 新欄名
+  as.character(chartitem_itemid$itemid),  
+  str_to_lower(str_replace_all(chartitem_itemid$label, " ", "_")) 
 )
 
 t <- system.time({
@@ -583,9 +609,12 @@ t <- system.time({
     filter(storetime >= intime, storetime <= outtime) |>
     group_by(subject_id, stay_id, itemid) |>
     slice_min(storetime, n = 1, with_ties = TRUE, na_rm = TRUE) |>
-    summarise(valuenum = mean(valuenum, na.rm = TRUE), .groups = "drop") |>
+    summarise(valuenum = mean(valuenum, na.rm = TRUE), 
+      .groups = "drop") |>
     pivot_wider(names_from = itemid, values_from = valuenum) |>
-    collect()
+    collect() |>
+    arrange(subject_id, stay_id)
+  
 
 chartevents_tble <- chartevents_tble |>
   rename_with(
@@ -601,6 +630,7 @@ chartevents_tble <- chartevents_tble |>
 })
 
 print(chartevents_tble, width = Inf)
+t
 ```
 
 ## Q7. Putting things together
@@ -667,7 +697,7 @@ ggplot(mimic_icu_cohort, aes(x = log1p(los))) +
 ```
 - Length of ICU stay `los` vs demographic variables (race, insurance, marital_status, gender, age at intime)
 
-(A) LOS vs Race / Insurance / Marital Status
+(A) LOS vs Race
 ```{r}
 mimic_icu_cohort |>
   mutate(race = fct_lump(race, n = 5)) |>
@@ -676,8 +706,27 @@ mimic_icu_cohort |>
   scale_y_continuous(trans = "log1p") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+LOS vs Insurance 
+```{r}
+mimic_icu_cohort |>
+  mutate(race = fct_lump(insurance, n = 5)) |>
+  ggplot(aes(x = insurance, y = los)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log1p") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+ 
+LOS vs Marital Status
+```{r}
+mimic_icu_cohort |>
+  mutate(race = fct_lump(marital_status, n = 5)) |>
+  ggplot(aes(x = marital_status, y = los)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log1p") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
-(B) LOS vs Gender
+LOS vs Gender
 ```{r}
 ggplot(mimic_icu_cohort, aes(x = gender, y = los)) +
   geom_boxplot() +
@@ -686,7 +735,7 @@ ggplot(mimic_icu_cohort, aes(x = gender, y = los)) +
        y = "LOS (log scale)")
 ```
 
-(c) LOS vs Age
+LOS vs Age
 
 ```{r}
 ggplot(mimic_icu_cohort, aes(x = age_intime, y = los)) +
@@ -695,6 +744,13 @@ ggplot(mimic_icu_cohort, aes(x = age_intime, y = los)) +
   labs(title = "ICU LOS vs Age",
        x = "Age at ICU",
        y = "LOS")
+```
+correlation between LOS and age at ICU
+```{r}
+cor(mimic_icu_cohort$age_intime,
+    mimic_icu_cohort$los,
+    use = "complete.obs")
+    
 ```
 
 - Length of ICU stay `los` vs the last available lab measurements before ICU stay
@@ -719,16 +775,79 @@ mimic_icu_cohort |>
 
 
 - Length of ICU stay `los` vs the first vital measurements within the ICU stay
+```{r}
+ggplot(mimic_icu_cohort, aes(x = heart_rate, y = los)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "loess") +
+  labs(title = "LOS vs First Heart Rate")
+```
+
+correlation matrix of `los` and vital measurements
+```{r}
+vital_vars <- c("heart_rate",
+                "respiratory_rate",
+                "temperature_fahrenheit",
+                "non_invasive_blood_pressure_systolic",
+                "non_invasive_blood_pressure_diastolic")
+
+mimic_icu_cohort |>
+  select(los, all_of(vital_vars)) |>
+  cor(use = "pairwise.complete.obs")
+  
+```
 
 - Length of ICU stay `los` vs first ICU unit
 
+```{r}
+ggplot(mimic_icu_cohort, aes(x = first_careunit, y = los)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "log1p") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "LOS by First ICU Unit")
+```
+numeric summary of LOS by first ICU unit
+```{r}
+mimic_icu_cohort |>
+  group_by(first_careunit) |>
+  summarise(
+    median_los = median(los, na.rm = TRUE),
+    IQR_los = IQR(los, na.rm = TRUE),
+    n = n()
+  ) |>
+  arrange(desc(median_los))
+```
 
 ## Q9. AI assistant
 
-Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity? 
+Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? 
+
+**solutions:**
+I use GitHub Copilot to help me write code faster and get suggestions for functions or syntax. I also use ChatGPT to ask for explanations of certain concepts or to help debug errors.
+
+Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity? 
+
+**solutions:**
+GitHub Copilot uses OpenAI's Codex model. ChatGPT uses the GPT-5.2 architecture. I use GitHub Copilot mainly for code suggestions and auto-completion, while I use ChatGPT for more complex questions or when I need help understanding a concept. Overall, I find that these AI assistants do help improve my productivity by providing quick suggestions and explanations, although they are not always perfect.
 
 Give 5 instances where AI model gave incorrect or misleading answers. You can use screenshots or copy-paste the Q&A.
+
+**solutions:**
 
 1. In Q1.2,  Error in `combine_vars()`:
 ! At least one layer must contain all faceting variables: `stay_id`
 ✖ Plot is missing `stay_id`
+
+2. In Q1.2, Error in `arrange()`:
+! `arrange()` doesn't know how to deal with data of class tbl_df/tbl/data.frame
+Run `rlang::last_error()` to see where the error occurred.
+
+3. In Q1.2, Error in `mutate()`:
+! Problem while computing `y_label = factor("Lab", levels = y_levels)`.
+Caused by error in `factor()`:
+! `levels` should be a character vector of the same length as `x`
+
+4. In Q5, Error in `pivot_wider()`:
+! Values in `valuenum` are not uniquely identified; output will contain list-cols. Consider summarising the values with an appropriate function, e.g. `pivot_wider(values_fn = list)`.
+
+5. In Q6, Error in Error: object '.' not found
+! Problem while computing `storetime = arrow::cast(storetime, arrow::timestamp(unit = "us", timezone = "UTC"))`.
