@@ -31,6 +31,13 @@ library(DBI)
 library(gt)
 library(gtsummary)
 library(tidyverse)
+library(arrow)
+library(data.table)
+library(duckdb)
+library(memuse)
+library(pryr)
+library(R.utils)
+library(dplyr)
 ```
 
 ```{r}
@@ -121,13 +128,30 @@ Our study cohort consists of ICU stays with documented invasive mechanical venti
 
 Index time. The index time is defined as the ventilation initiation time (starttime) for the invasive ventilation event. All predictive features are derived from information available prior to (or at) the index time to avoid information leakage.
 
-    * Inclusion/exclusion criteria if applicable
-    
-    * Strategies for handling big data: BigQuery/dbplyr or Arrow/Parquet/DuckDB
-    
-    * privacy and appropriate use and MIMIC credentialing context
+* Inclusion Criteria
 
-        
+adult patients (age ≥ 18)
+
+first ICU stay only
+
+mechanical ventilation during ICU stay
+
+* Exclusion Criteria
+
+ICU stay < 24 hours
+
+missing key demographic variables
+    
+* Strategies for handling big data: 
+BigQuery/dbplyr 
+    
+* privacy and appropriate use and MIMIC credentialing context
+
+
+
+
+
+ 
 ### 4.2 Variables / Features
     
     * What variables are included and why
@@ -153,21 +177,100 @@ Index time. The index time is defined as the ventilation initiation time (startt
 State your findings clearly and objectively. Provide tables and figures where appropriate.
     
 ### 5.1 Cohort / Sample Characteristics
-    
-```{r}
-vent_itemid <- 225792L
 
-vent_events <- tbl(con_bq, "procedureevents") |>
-  select(subject_id, hadm_id, stay_id, itemid, starttime, endtime) |>
-  filter(itemid == vent_itemid) |>
-  filter(!is.na(starttime), !is.na(endtime), endtime > starttime) |>
-  mutate(
-    vent_hours = as.numeric(difftime(endtime, starttime, units = "hours")),
-    prolonged = as.integer(vent_hours > 72)   # > 3 days
-  ) |>
-  select(subject_id, hadm_id, stay_id, vent_start = starttime, vent_end = endtime, vent_hours, prolonged)
+```{bash}
+zcat < ~/mimic/icu/procedureevents.csv.gz \
+| awk -F, 'NR==1 || $8==225792' \
+| head -10
 ```
-    
+
+```{bash}
+zcat < ~/mimic/icu/d_items.csv.gz \
+| awk -F, 'NR==1 || $1==225792 {print $0}'
+```
+
+```{r}
+icustays_tbl <- tbl(con_bq, "icustays")
+proc_tbl     <- tbl(con_bq, "procedureevents")
+d_items_tbl  <- tbl(con_bq, "d_items")
+```
+```{r}
+d_items_tbl |>
+  filter(itemid == 225792) |>
+  select(itemid, label, category, unitname) |>
+  collect()
+```
+```{r}
+vent_events <- proc_tbl |>
+  filter(itemid == 225792) |>
+  filter(!is.na(starttime), !is.na(endtime)) |>
+  mutate(
+    dur_sec = sql("TIMESTAMP_DIFF(endtime, starttime, SECOND)"),
+    dur_hr  = dur_sec / 3600.0
+  ) |>
+  filter(dur_hr >= 0) |>
+  select(subject_id, hadm_id, stay_id, itemid, starttime, endtime, dur_hr)
+```
+
+```{r}
+vent_events |>
+  summarise(
+    n_events = n(),
+    min_hr = min(dur_hr),
+    p50_hr = sql("APPROX_QUANTILES(dur_hr, 100)[OFFSET(50)]"),
+    p95_hr = sql("APPROX_QUANTILES(dur_hr, 100)[OFFSET(95)]"),
+    max_hr = max(dur_hr)
+  ) |>
+  collect()
+```
+```{r}
+vent_stay <- vent_events |>
+  group_by(stay_id) |>
+  summarise(
+    vent_hr = sum(dur_hr, na.rm = TRUE),
+    n_vent_events = n(),
+    vent_start_min = min(starttime),
+    vent_end_max   = max(endtime),
+    .groups = "drop"
+  )
+
+cut_hr <- 72
+
+vent_stay_labeled <- vent_stay |>
+  mutate(y_prolong = as.integer(vent_hr > cut_hr))
+
+cohort <- icustays_tbl |>
+  inner_join(vent_stay_labeled, by = "stay_id") |>
+  select(
+    subject_id, hadm_id, stay_id,
+    first_careunit, last_careunit,
+    intime, outtime,
+    vent_hr, n_vent_events, vent_start_min, vent_end_max,
+    y_prolong
+  )
+```
+
+```{r}
+vent_stay_labeled |>
+  summarise(
+    n_stays = n(),
+    prop_prolong = mean(y_prolong)
+  ) |>
+  collect()
+```
+
+```{r}
+cohort |>
+  summarise(
+    n = n(),
+    n_subject = n_distinct(subject_id),
+    n_hadm = n_distinct(hadm_id)
+  ) |>
+  collect()
+```
+
+
+
     * Description of your data (counts, demographics, etc.)
         
     5.2 Model Performance
