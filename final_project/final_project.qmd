@@ -1,5 +1,243 @@
 ---
-title: "final_project"
-format: html
+title: "Biostat 203B/212A Final Project: MIMIC-IV Machine Learning"
+subtitle: "End-to-end, reproducible ML pipeline in R"
+author: "ChihWei Hsu, UID: 706788612"
+format:
+  html:
+    theme: cosmo
+    embed-resources: true
+    number-sections: false
+    toc: true
+    toc-depth: 4
+    toc-location: left
+    code-fold: false
 ---
+
+Display machine information:
+```{r}
+sessionInfo()
+```
+
+Display my machine memory.
+```{r}
+memuse::Sys.meminfo()
+```
+
+Load database libraries and the tidyverse frontend:
+```{r}
+library(bigrquery)
+library(dbplyr)
+library(DBI)
+library(gt)
+library(gtsummary)
+library(tidyverse)
+```
+
+```{r}
+# path to the service account token 
+satoken <- "biostat-203b-2026-winter-92fefbfab477.json"
+# BigQuery authentication using service account
+bq_auth(path = satoken)
+```
+
+Connect to BigQuery database `mimiciv_3_1` in GCP (Google Cloud Platform), using the project billing account `biostat-203b-2025-winter`.
+```{r}
+# connect to the BigQuery database `biostat-203b-2025-mimiciv_3_1`
+con_bq <- dbConnect(
+    bigrquery::bigquery(),
+    project = "biostat-203b-2025-winter",
+    dataset = "mimiciv_3_1",
+    billing = "biostat-203b-2025-winter"
+)
+con_bq
+```
+
+List all tables in the `mimiciv_3_1` database.
+```{r}
+dbListTables(con_bq)
+```
+## 1. Title Page
+
+### Project title 
+Machine Learning on MIMIC-IV Data: Classifying ICU Patients by Duration of Invasive Mechanical Ventilation
+
+### Your name and UID
+Chihwei Hsu, UID: 706788612
+
+### Your team members
+Max Vo, Frank Hsu, Jolly Lin
+
+
+
+## 2. Abstract
+Provide a succinct summary of your entire project (~250–300 words), including:
+
+### Background
+Context and why the problem matters
+    
+### Objectives
+Among ICU patients who receive invasive mechanical ventilation, classify the duration of ventilation (short vs moderate vs prolonged) using clinical and demographic features available at or immediately before the start of ventilation.
+    
+### Methods - Main approach and data sources
+    
+### Results - Key findings
+    
+### Conclusion - Implications and potential impact
+
+
+## 3. Introduction
+Establish your project’s rationale and research gap.
+
+### Background
+        * Overview of the topic area
+        * Why it’s important or impactful
+        
+### Literature Review
+
+### Problem Statement
+         * What specific issue or question your project addresses
+    
+### Objectives
+        * Clear and specific aims of the project
+        
+### Project Aims/Hypotheses
+        * Clearly define your research objectives  
+        * What you expect to find or demonstrate
+        
+## 4. Methods
+
+    Describe exactly how you conducted your project so others could reproduce it.
+    
+### 4.1 Data Source or Materials
+
+* Dataset(s) used: 
+
+We used the MIMIC-IV database to construct an end-to-end, reproducible machine learning pipeline in R. I accessed the data using Google BigQuery via dbplyr, enabling scalable querying and feature extraction.
+    
+    
+* Cohort definition: 
+
+Our study cohort consists of ICU stays with documented invasive mechanical ventilation events identified from the ICU procedureevents table using the invasive ventilation ItemID (225792). Each ICU stay is treated as a unit of analysis (stay_id). We link ventilation events to ICU stays (icustays) and hospital admissions (admissions) using MIMIC-IV identifiers (subject_id, hadm_id, stay_id). We restrict the cohort to adult patients based on the MIMIC-IV age representation (anchor age). We exclude records with missing or invalid ventilation timestamps required to compute ventilation duration.
+
+Index time. The index time is defined as the ventilation initiation time (starttime) for the invasive ventilation event. All predictive features are derived from information available prior to (or at) the index time to avoid information leakage.
+
+    * Inclusion/exclusion criteria if applicable
+    
+    * Strategies for handling big data: BigQuery/dbplyr or Arrow/Parquet/DuckDB
+    
+    * privacy and appropriate use and MIMIC credentialing context
+
+        
+### 4.2 Variables / Features
+    
+    * What variables are included and why
+        
+    * How they were processed or transformed
+        
+    4.3 Analytical Approach / Modeling
+    
+    * Index time, prediction window, and outcome definition
+    
+    * Machine learning algorithms (require at least 3)
+        
+    * Software used (e.g., R packages)
+        
+    4.4 Model Evaluation
+    
+    * Performance metrics (e.g., ROC/AUC, accuracy)
+        
+    * Validation methods (train/test split, cross-validation, etc.)
+        
+## 5. Results
+
+State your findings clearly and objectively. Provide tables and figures where appropriate.
+    
+### 5.1 Cohort / Sample Characteristics
+    
+```{r}
+vent_itemid <- 225792L
+
+vent_events <- tbl(con_bq, "procedureevents") |>
+  select(subject_id, hadm_id, stay_id, itemid, starttime, endtime) |>
+  filter(itemid == vent_itemid) |>
+  filter(!is.na(starttime), !is.na(endtime), endtime > starttime) |>
+  mutate(
+    vent_hours = as.numeric(difftime(endtime, starttime, units = "hours")),
+    prolonged = as.integer(vent_hours > 72)   # > 3 days
+  ) |>
+  select(subject_id, hadm_id, stay_id, vent_start = starttime, vent_end = endtime, vent_hours, prolonged)
+```
+    
+    * Description of your data (counts, demographics, etc.)
+        
+    5.2 Model Performance
+    
+    * Summary of main results (metrics, comparisons among models)
+        
+    5.3 Additional Analyses
+    
+    * Feature importance (Shapley values), calibration, etc.
+        
+## 6. Discussion
+
+    Interpret the results and place them in context.
+    
+    6.1 Summary of Findings
+    
+    * What the results mean and how they relate to your aims
+        
+    6.2 Comparison with Previous Work
+    
+    * How your findings align with or differ from others
+        
+    6.3 Strengths and Limitations
+    
+    * What worked well; what constraints or biases exist
+        
+    6.4 Implications
+    
+    * Practical, theoretical, or clinical applications of your findings
+    
+## 7. Conclusion
+
+    Wrap up with clear takeaways and next steps.
+    
+    * Recap main conclusions
+    * Significance and contributions
+    * Suggestions for future research or improvements
+    
+## 8. References
+
+    * List all sources cited in your paper
+    
+    * Use consistent citation formatting (e.g., APA, MLA, or journal style)
+    
+## 9. AI usage acknowledgement
+
+
+
+
+
+
+## Grading rubric for 203B (100 pts)
+
+- Data pipeline & cohort correctness (20)
+- EDA + required trajectory visualization (10)
+- Shiny app functionality and relevance (30)
+- Reproducibility + Git quality (35)
+- Ethics & responsible reporting (5)
+
+## Grading rubric for 212A (100 pts)
+
+- Clinical question & prediction framing (10 pts)  
+- Cohort construction validity for modeling (10 pts)
+- Preprocessing & feature engineering (15 pts)
+- Model set: at least 3 models of increasing complexity (15 pts)
+- Resampling & hyperparameter tuning (15 pts)
+- Train/test split design & leakage avoidance (10 pts)
+- Evaluation metrics, calibration, and model comparison (15 pts)
+- Interpretation of model behavior (10 pts)
+- Reproducibility & reporting quality (5 pts)
+- Limitations & responsible ML/ethics (5 pts)
+
 
