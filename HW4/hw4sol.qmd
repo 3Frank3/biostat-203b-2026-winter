@@ -68,17 +68,11 @@ Connect to the `icustays` table.
 # full ICU stays table
 icustays_tble <- tbl(con_bq, "icustays") |>
   arrange(subject_id, hadm_id, stay_id) |>
-  # show_query() |>
+  #show_query() |>
   print(width = Inf)
 ```
 
 ### Q1.3 `admissions` data
-
-```{bash}
-ls -l ~/mimic/hosp/admissions.csv.gz
-zcat < ~/mimic/hosp/admissions.csv.gz | head -10
-```
-
 Connect to the `admissions` table.
 ```{r}
 admissions_tble <- tbl(con_bq, "admissions") |>
@@ -88,13 +82,8 @@ admissions_tble <- tbl(con_bq, "admissions") |>
 ```
 
 ### Q1.4 `patients` data
-
-```{bash}
-zcat < ~/mimic/hosp/patients.csv.gz | head -10
-```
 Connect to the `patients` table.
 ```{r}
-
 patients_tble <-tbl(con_bq, "patients") |>
   arrange(subject_id) |>
   # show_query() |>
@@ -103,10 +92,43 @@ patients_tble <-tbl(con_bq, "patients") |>
 
 ### Q1.5 `labevents` data
 
+```{bash}
+zcat < ~/mimic/hosp/labevents.csv.gz | head -10
+```
+
 Connect to the `labevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the lab items listed in HW3. Only keep the last lab measurements (by `storetime`) before the ICU stay and pivot lab items to become variables/columns. Write all steps in _one_ chain of pipes.
 ```{r}
-# # TODO
-# labevents_tble <- 
+
+lab_items <- c(
+  50862, 50912, 50971, 50983, 
+  50902, 50882, 51221, 51301, 50931
+)
+
+labevents_tble <- tbl(con_bq, "labevents") |>
+  select(subject_id, hadm_id, itemid, storetime, valuenum) |>
+  filter(itemid %in% lab_items) |>
+  inner_join(
+    icustays_tble |>
+      select(subject_id, hadm_id, stay_id, intime),
+    by = c("subject_id", "hadm_id")
+  ) |>
+  filter(!is.na(storetime), storetime <= intime) |>
+  group_by(stay_id, subject_id, hadm_id, itemid) |>
+  slice_max(order_by = storetime, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  inner_join(
+    tbl(con_bq, "d_labitems") |>
+      select(itemid, label),
+    by = "itemid"
+  ) |>
+  select(stay_id, subject_id, hadm_id, label, valuenum) |>
+  collect() |>
+  mutate(label = str_replace_all(label, "[^A-Za-z0-9]+", "_")) |>
+  pivot_wider(
+    names_from  = label,
+    values_from = valuenum
+  ) |>
+  print(width = Inf)
 ```
 
 ### Q1.6 `chartevents` data
