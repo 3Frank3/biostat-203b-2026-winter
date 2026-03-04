@@ -1,8 +1,6 @@
 ### Overall Grade: 
 293/300
 
-- Late penalty: (not included in these CSVs)
-
 ### Quality of report: 
 10/10
 
