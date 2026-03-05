@@ -75,18 +75,17 @@ Chihwei Hsu, UID: 706788612
 Max Vo, Frank Hsu, Jolly Lin
 
 
-
 ## 2. Abstract
 Provide a succinct summary of your entire project (~250–300 words), including:
 
 ### Background
-Context and why the problem matters
+Prolonged mechanical ventilation is clinically meaningful because it is strongly associated with increased ICU morbidity, including ventilator-associated complications/events, longer ICU length of stay, and higher mortality risk. Identifying patients at risk for prolonged ventilation can inform early clinical decision-making, resource allocation, and discussions with patients’ families regarding prognosis.
     
 ### Objectives
 Among ICU patients who receive invasive mechanical ventilation, classify the duration of ventilation (short vs moderate vs prolonged) using clinical and demographic features available at or immediately before the start of ventilation.
     
 ### Methods - Main approach and data sources
-    
+
 ### Results - Key findings
     
 ### Conclusion - Implications and potential impact
@@ -96,25 +95,22 @@ Among ICU patients who receive invasive mechanical ventilation, classify the dur
 Establish your project’s rationale and research gap.
 
 ### Background
-        * Overview of the topic area
-        * Why it’s important or impactful
+Prolonged mechanical ventilation is clinically meaningful because it is strongly associated with increased ICU morbidity, including ventilator-associated complications/events, longer ICU length of stay, and higher mortality risk. Identifying patients at risk for prolonged ventilation can inform early clinical decision-making, resource allocation, and discussions with patients’ families regarding prognosis.
         
 ### Literature Review
 
 ### Problem Statement
-         * What specific issue or question your project addresses
+
     
 ### Objectives
-        * Clear and specific aims of the project
+Among ICU patients who receive invasive mechanical ventilation, classify the duration of ventilation (short vs moderate vs prolonged) using clinical and demographic features available at or immediately before the start of ventilation.
         
 ### Project Aims/Hypotheses
-        * Clearly define your research objectives  
-        * What you expect to find or demonstrate
+* Clearly define your research objectives  
+* What you expect to find or demonstrate
         
 ## 4. Methods
 
-    Describe exactly how you conducted your project so others could reproduce it.
-    
 ### 4.1 Data Source or Materials
 
 * Dataset(s) used: 
@@ -126,13 +122,12 @@ We used the MIMIC-IV database to construct an end-to-end, reproducible machine l
 
 Our study cohort consists of ICU stays with documented invasive mechanical ventilation events identified from the ICU procedureevents table using the invasive ventilation ItemID (225792). Each ICU stay is treated as a unit of analysis (stay_id). We link ventilation events to ICU stays (icustays) and hospital admissions (admissions) using MIMIC-IV identifiers (subject_id, hadm_id, stay_id). We restrict the cohort to adult patients based on the MIMIC-IV age representation (anchor age). We exclude records with missing or invalid ventilation timestamps required to compute ventilation duration.
 
-Index time. The index time is defined as the ventilation initiation time (starttime) for the invasive ventilation event. All predictive features are derived from information available prior to (or at) the index time to avoid information leakage.
+* Index time:
+The index time is defined as the ventilation initiation time (starttime) for the invasive ventilation event. All predictive features are derived from information available prior to (or at) the index time to avoid information leakage.
 
 * Inclusion Criteria
 
-adult patients (age ≥ 18)
-
-first ICU stay only
+eldely patients (age ≥ 65)
 
 mechanical ventilation during ICU stay
 
@@ -190,14 +185,16 @@ zcat < ~/mimic/icu/d_items.csv.gz \
 ```
 
 ```{r}
-icustays_tbl <- tbl(con_bq, "icustays")
-proc_tbl     <- tbl(con_bq, "procedureevents")
-d_items_tbl  <- tbl(con_bq, "d_items")
+patients_tbl   <- tbl(con_bq, "patients")
+admissions_tbl <- tbl(con_bq, "admissions")
+icustays_tbl   <- tbl(con_bq, "icustays")
+proc_tbl       <- tbl(con_bq, "procedureevents")
+d_items_tbl    <- tbl(con_bq, "d_items")
 ```
 ```{r}
 d_items_tbl |>
   filter(itemid == 225792) |>
-  select(itemid, label, category, unitname) |>
+  select(itemid, label, category) |>
   collect()
 ```
 ```{r}
@@ -209,13 +206,14 @@ vent_events <- proc_tbl |>
     dur_hr  = dur_sec / 3600.0
   ) |>
   filter(dur_hr >= 0) |>
-  select(subject_id, hadm_id, stay_id, itemid, starttime, endtime, dur_hr)
+  select(subject_id, hadm_id, stay_id, itemid, starttime, endtime, dur_hr) |>
+  print(width = inf)
 ```
 
 ```{r}
 vent_events |>
   summarise(
-    n_events = n(),
+    n_patients = n_distinct(subject_id),
     min_hr = min(dur_hr),
     p50_hr = sql("APPROX_QUANTILES(dur_hr, 100)[OFFSET(50)]"),
     p95_hr = sql("APPROX_QUANTILES(dur_hr, 100)[OFFSET(95)]"),
