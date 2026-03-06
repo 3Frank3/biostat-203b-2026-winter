@@ -79,15 +79,37 @@ cohort_proc <- proc_tbl |>
   filter(anchor_age >65) 
 ```
 
+
 ```{r}
-cohort_proc |>
-  summarise(
-    n_subject = n_distinct(subject_id),
-    n_hadm    = n_distinct(hadm_id),
-    n_stay    = n_distinct(stay_id)
+cohort_tbl <- cohort_proc |>
+   mutate(
+    dur_sec = sql("DATETIME_DIFF(endtime, starttime, SECOND)"),
+    dur_hr  = dur_sec / 3600.0
   ) |>
-  collect() |>
-  print(width = Inf)
+  filter(dur_hr >= 0) |>
+  group_by(stay_id) |>
+  summarise(
+    subject_id = min(subject_id),
+    hadm_id    = min(hadm_id),
+    vent_start = min(starttime),
+    vent_end   = max(endtime),
+    vent_hr    = sum(dur_hr),
+    n_vent_events = n(),
+    y_prolong = sql(paste0("CAST(SUM(dur_hr) > ", 72, " AS INT64)")),
+    .groups = "drop"
+  ) |>
+  print()
+```
+
+```{r}
+cohort_tbl |>
+  summarise(
+    n = n(),
+    n_stay = n_distinct(stay_id),
+    n_subj = n_distinct(subject_id),
+    prop_prolong = avg(y_prolong)
+  ) |>
+  collect()
 ```
 
 
@@ -205,29 +227,26 @@ lab_items <- c(
    51006, 50912, 50971, 50983
   )
 
-labevents_tble <- tbl(con_bq, "labevents") |>
+labevents_tbl <- tbl(con_bq, "labevents") |>
   filter(itemid %in% lab_items) |>
+  # 1) 只保留 cohort stays，並帶入 vent_start（DATETIME）
   inner_join(
     cohort_proc |>
-      group_by(subject_id) |>
-      summarise(
-        vent_start = min(starttime),
-        .groups = "drop"
-      ),
-    by = "subject_id"
+      select(subject_id, hadm_id, stay_id, vent_start = starttime),
+    by = c("subject_id", "hadm_id")
   ) |>
-  filter(!is.na(storetime)) |>
+  filter(!is.na(storetime), !is.na(valuenum)) |>
+  # 2) 只取 vent_start 之前最後一筆（by storetime）
   filter(sql("DATETIME(storetime)") <= vent_start) |>
-  group_by(subject_id, itemid) |>
+  group_by(stay_id, itemid) |>
   mutate(last_storetime = max(storetime)) |>
   ungroup() |>
   filter(storetime == last_storetime) |>
-  group_by(subject_id, itemid) |>
-  summarise(
-    valuenum = avg(valuenum),   # <-- no na.rm
-    .groups = "drop"
-  ) |>
-  group_by(subject_id) |>
+  # 3) ties 平均
+  group_by(stay_id, itemid) |>
+  summarise(valuenum = avg(valuenum), .groups = "drop") |>
+  # 4) pivot wide
+  group_by(stay_id) |>
   summarise(
     UreaNitrogen = sql("MAX(IF(itemid=51006, valuenum, NULL))"),
     creatinine   = sql("MAX(IF(itemid=50912, valuenum, NULL))"),
@@ -254,11 +273,11 @@ chart_items <- c(
     220210    # respiratory_rate
   ) 
 
-chartevents_tble <- tbl(con_bq, "chartevents") |>
+chartevents_tbl <- tbl(con_bq, "chartevents") |>
   # 1) restrict to cohort stays + bring in anchor time (starttime)
   inner_join(
     cohort_proc |>
-      select(stay_id, starttime),  # <- 若你的欄名不同，改這行
+      select(stay_id, starttime),  
     by = "stay_id"
   ) |>
   # 2) keep target vitals only
@@ -290,52 +309,153 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
   ) |>
   print()
 ```
-  
-  
-  
-  
-  
+
+### services
+
 ```{r}
-services_tbl   <- tbl(con_bq, "services") |>
-  select(subject_id, hadm_id, curr_service) |>
-  print(width=inf)
+services_tbl <- tbl(con_bq, "services") |>
+  select(subject_id, hadm_id, transfertime, curr_service) |>
+  mutate(
+    rn = sql("
+      ROW_NUMBER() OVER (
+        PARTITION BY subject_id, hadm_id
+        ORDER BY transfertime DESC
+      )
+    ")
+  ) |>
+  filter(rn == 1) |>
+  select(subject_id, hadm_id, curr_service)
 ```
 
-### putting things together
+## putting things together
 
 ```{r}
-mimic_core <- cohort |>
-  left_join(
-    admissions_tbl,
-    by = "hadm_id",
-    suffix = c("", "_adm")
-  ) |>
-  left_join(
-    patients_tbl,
-    by = "subject_id",
-    suffix = c("", "_pt")
-  ) |>
-  left_join(
-    icustays_tbl,
-    by = "stay_id",
-    suffix = c("", "_icust")
-  ) |>
-  left_join(
-    omr_features,
-    by = "subject_id",
-    suffix = c("", "_omr")
-  ) |>
-  left_join(
-    services_tbl,
-    by = "subject_id",
-    suffix = c("", "_serv")
-  )
+model_tbl <- cohort_tbl |>
+  left_join(admissions_tbl, by = c("subject_id","hadm_id")) |>
+  left_join(patients_tbl,   by = "subject_id") |>
+  left_join(icustays_tbl |> select(stay_id, intime, outtime, first_careunit, last_careunit),
+            by = "stay_id") |>
+  left_join(omr_features,   by = "subject_id") |>
+  left_join(services_tbl,     by = c("subject_id","hadm_id")) |>
+  left_join(labevents_tbl,  by = "stay_id") |>
+  left_join(chartevents_tbl,by = "stay_id") |>
+  arrange(subject_id) |>
+  print()
 ```
 
 ```{r}
-mimic_icu_cohort <- mimic_core |>
-  left_join(labevents_tble,   by = "stay_id") |>
-  left_join(chartevents_tbl, by = "stay_id")
+check_keys <- function(x, name){
+  x |>
+    summarise(
+      n = n(),
+      n_subj = n_distinct(subject_id),
+      n_hadm = n_distinct(hadm_id),
+      n_stay = n_distinct(stay_id)
+    ) |>
+    collect() |>
+    mutate(step = name)
+}
 
-print(mimic_icu_cohort, width = Inf)
+check_keys(cohort_proc, "cohort_proc")      
+check_keys(cohort_tbl, "cohort_tbl")
+check_keys(model_tbl,   "after all joins")
+
 ```
+
+```{r}
+miss_tbl <- model_tbl |>
+  summarise(
+    n = n(),
+
+    miss_urea = sql("AVG(IF(UreaNitrogen IS NULL, 1, 0))"),
+    miss_cr   = sql("AVG(IF(creatinine IS NULL, 1, 0))"),
+    miss_k    = sql("AVG(IF(potassium IS NULL, 1, 0))"),
+    miss_na   = sql("AVG(IF(sodium IS NULL, 1, 0))"),
+
+    miss_hr   = sql("AVG(IF(heart_rate IS NULL, 1, 0))"),
+    miss_sbp  = sql("AVG(IF(systolic_bp IS NULL, 1, 0))"),
+    miss_dbp  = sql("AVG(IF(diastolic_bp IS NULL, 1, 0))"),
+    miss_temp = sql("AVG(IF(temperature_c IS NULL, 1, 0))"),
+    miss_rr   = sql("AVG(IF(respiratory_rate IS NULL, 1, 0))")
+  ) |>
+  collect()
+miss_tbl
+
+```
+
+```{r}
+miss_rate <- sapply(model_local, function(x) mean(is.na(x)))
+miss_rate <- sort(miss_rate, decreasing = TRUE)
+miss_rate
+```
+## modeling
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+
+# 0) outcome as factor
+df <- model_tbl |>
+  mutate(y_prolong = factor(y_prolong, levels = c(0, 1)))
+
+# drop IDs if present
+id_cols <- intersect(c("stay_id", "subject_id", "hadm_id"), names(df))
+df <- df |> select(-all_of(id_cols))
+
+# (optional but useful) convert "" -> NA for CHARACTER columns only
+df <- df |>
+  mutate(across(where(is.character), ~ na_if(.x, "")))
+
+# 1) split
+set.seed(203)
+split_obj <- initial_split(df, prop = 0.8, strata = y_prolong)
+train_df  <- training(split_obj)
+test_df   <- testing(split_obj)
+
+# 2) CV
+set.seed(203)
+folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
+
+# 3) recipe (no step_mutate_at!)
+rec <- recipe(y_prolong ~ ., data = train_df) |>
+  step_zv(all_predictors()) |>
+  # turn character -> factor where needed (safe)
+  step_string2factor(all_nominal_predictors()) |>
+  # NA levels -> "unknown"
+  step_unknown(all_nominal_predictors(), new_level = "Unknown") |>
+  # numeric median impute
+  step_impute_median(all_numeric_predictors()) |>
+  # one-hot
+  step_dummy(all_nominal_predictors(), one_hot = TRUE)
+
+# 4) model + workflow
+log_spec <- logistic_reg() |>
+  set_engine("glm")
+
+wf <- workflow() |>
+  add_recipe(rec) |>
+  add_model(log_spec)
+
+cls_metrics <- metric_set(roc_auc, pr_auc)
+
+# 5) CV
+cv_res <- fit_resamples(
+  wf,
+  resamples = folds,
+  metrics = cls_metrics,
+  control = control_resamples(save_pred = TRUE)
+)
+collect_metrics(cv_res)
+
+# 6) test eval
+final_res <- last_fit(wf, split_obj, metrics = cls_metrics)
+collect_metrics(final_res)
+
+# 7) Brier score on test
+pred_test <- collect_predictions(final_res) |>
+  mutate(y01 = as.integer(y_prolong == "1"),
+         brier = (.pred_1 - y01)^2)
+
+mean(pred_test$brier)
+```
+
