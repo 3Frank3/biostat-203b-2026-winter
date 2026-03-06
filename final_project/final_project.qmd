@@ -173,30 +173,19 @@ State your findings clearly and objectively. Provide tables and figures where ap
     
 ### 5.1 Cohort / Sample Characteristics
 
+
 ```{bash}
 zcat < ~/mimic/icu/procedureevents.csv.gz \
 | awk -F, 'NR==1 || $8==225792' \
 | head -10
 ```
 
-```{bash}
-zcat < ~/mimic/icu/d_items.csv.gz \
-| awk -F, 'NR==1 || $1==225792 {print $0}'
+```{r}
+proc_tbl <- tbl(con_bq, "procedureevents") |>
+  arrange(subject_id) |>
+  print(width=inf)
 ```
 
-```{r}
-patients_tbl   <- tbl(con_bq, "patients")
-admissions_tbl <- tbl(con_bq, "admissions")
-icustays_tbl   <- tbl(con_bq, "icustays")
-proc_tbl       <- tbl(con_bq, "procedureevents")
-d_items_tbl    <- tbl(con_bq, "d_items")
-```
-```{r}
-d_items_tbl |>
-  filter(itemid == 225792) |>
-  select(itemid, label, category) |>
-  collect()
-```
 ```{r}
 vent_events <- proc_tbl |>
   filter(itemid == 225792) |>
@@ -266,6 +255,323 @@ cohort |>
   ) |>
   collect()
 ```
+
+
+
+
+
+```{r}
+patients_tbl <- tbl(con_bq, "patients") |>
+  select(subject_id, gender, anchor_age) |>
+  arrange(subject_id) |>
+  print(width =inf)
+```
+
+```{r}
+admissions_tbl <- tbl(con_bq, "admissions") |>
+  select(
+    subject_id, 
+    hadm_id, 
+    admission_type, 
+    admission_location, 
+    race, 
+    hospital_expire_flag
+    ) |>
+  arrange(subject_id, hadm_id) |>
+  print(width=inf)
+```
+
+```{r}
+icustays_tbl   <- tbl(con_bq, "icustays") |>
+  arrange(subject_id, stay_id) |>
+  print(width=inf)
+```
+
+```{bash}
+zcat < ~/mimic/icu/d_items.csv.gz \
+| awk -F, 'NR==1 || $1==225792 {print $0}'
+```
+
+```{r}
+ditems_tbl <- tbl(con_bq, "d_items") |>
+  filter(itemid == 225792) |>
+  select(itemid, label, category) |>
+  print(width=inf)
+```
+
+```{r}
+omr_tbl <- tbl(con_bq, "omr") |>
+  arrange(subject_id) |>
+  print(width=inf)
+```
+
+setting each subject_id ventilation anchor time
+```{r}
+vent_anchor_subj <- proc_tbl |>
+  filter(itemid == 225792) |>
+  filter(!is.na(starttime)) |>
+  group_by(subject_id) |>
+  summarise(
+    vent_start = min(starttime),
+    .groups = "drop"
+  )
+```
+
+select BMI/BP from omr_tbl
+```{r}
+omr_bp_bmi <- omr_tbl |>
+  filter(result_name %in% c("BMI (kg/m2)", "Blood Pressure"))
+```
+
+```{r}
+omr_days_both <- omr_bp_bmi |>
+  group_by(subject_id, chartdate) |>
+  summarise(
+    has_bmi = max(as.integer(result_name == "BMI (kg/m2)")),
+    has_bp  = max(as.integer(result_name == "Blood Pressure")),
+    .groups = "drop"
+  ) |>
+  filter(has_bmi == 1, has_bp == 1)
+```
+
+
+```{r}
+best_day <- vent_anchor_subj |>
+  inner_join(omr_days_both, by = "subject_id") |>
+  mutate(
+    rn = sql("
+      ROW_NUMBER() OVER (
+        PARTITION BY subject_id
+        ORDER BY
+          ABS(DATETIME_DIFF(DATETIME(chartdate), DATETIME(vent_start), SECOND)) ASC,
+          chartdate DESC
+      )
+    ")
+  ) |>
+  filter(rn == 1) |>
+  select(subject_id, omr_date = chartdate)
+```
+
+```{r}
+omr_bestday_long <- omr_bp_bmi |>
+  inner_join(best_day, by = "subject_id") |>
+  filter(chartdate == omr_date) |>
+  mutate(
+    rn2 = sql("
+      ROW_NUMBER() OVER (
+        PARTITION BY subject_id, result_name
+        ORDER BY seq_num DESC
+      )
+    ")
+  ) |>
+  filter(rn2 == 1) |>
+  select(subject_id, omr_date, result_name, result_value)
+```
+
+```{r}
+omr_features <- omr_bestday_long |>
+  group_by(subject_id, omr_date) |>
+  summarise(
+    bmi = sql("MAX(IF(result_name='BMI (kg/m2)', SAFE_CAST(result_value AS FLOAT64), NULL))"),
+    bp_raw = sql("MAX(IF(result_name='Blood Pressure', result_value, NULL))"),
+    sbp = sql("MAX(IF(result_name='Blood Pressure', SAFE_CAST(SPLIT(result_value,'/')[OFFSET(0)] AS FLOAT64), NULL))"),
+    dbp = sql("MAX(IF(result_name='Blood Pressure', SAFE_CAST(SPLIT(result_value,'/')[OFFSET(1)] AS FLOAT64), NULL))"),
+    .groups = "drop"
+  ) |>
+  print(width=inf)
+```
+
+
+```{bash}
+zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i Nitrogen
+```
+
+```{r}
+# 1) target itemids
+lab_items <- c(
+   51006, 50912, 50971, 50983
+  )
+
+lab_name <- c(
+  UreaNitrogen = "51006",
+  creatinine  = "50912",
+  potassium   = "50971",
+  sodium      = "50983"
+)
+```
+
+```{r}
+
+# 2) ICU reference table
+icu_rtbl <- icustays_tbl |>
+  transmute(
+    subject_id = as.integer(subject_id),
+    hadm_id    = as.integer(hadm_id),
+    stay_id    = as.integer(stay_id),
+    intime
+  )
+
+# 3) base lab table
+labs_base <- tbl(con_bq, "labevents") |>
+  transmute(
+    subject_id = as.integer(subject_id),
+    hadm_id    = as.integer(hadm_id),
+    itemid     = as.integer(itemid),
+    storetime,
+    valuenum
+  ) |>
+  filter(itemid %in% !!lab_items) |>
+  inner_join(icu_rtbl, by = c("subject_id", "hadm_id")) |>
+  filter(storetime <= intime)
+
+# 4) find the last pre-ICU lab time for each stay_id and itemid
+labs_last_time <- labs_base |>
+  group_by(stay_id, itemid) |>
+  summarise(
+    last_storetime = max(storetime, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 5) keep rows at that last time, average ties if multiple rows exist
+labs_last <- labs_base |>
+  inner_join(labs_last_time, by = c("stay_id", "itemid")) |>
+  filter(storetime == last_storetime) |>
+  group_by(stay_id, itemid) |>
+  summarise(
+    valuenum = mean(valuenum, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 6) wide-format output, still as BigQuery remote table
+labevents_tble <- labs_last |>
+  group_by(stay_id) |>
+  summarise(
+    UreaNitrogen = mean(case_when(itemid == 51006 ~ valuenum), na.rm = TRUE),
+    creatinine   = mean(case_when(itemid == 50912 ~ valuenum), na.rm = TRUE),
+    potassium    = mean(case_when(itemid == 50971 ~ valuenum), na.rm = TRUE),
+    sodium       = mean(case_when(itemid == 50983 ~ valuenum), na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(stay_id)
+
+labevents_tble
+```
+
+```{r}
+d_items_tbl <- tbl(con_bq, "d_items")
+```
+
+```{r}
+chartitem_itemid <- d_items_tbl |>
+  filter(itemid %in% c(
+    220045,   # heart rate
+    220179,   # systolic_bp
+    220180,   # diastolic_bp
+    223761,   # temperature_c
+    220210    # respiratory_rate
+  )) |>
+  collect()
+
+item_ids <- chartitem_itemid$itemid
+```
+
+```{r}
+  chartevents_raw <- tbl(con_bq, "chartevents") |>
+    select(subject_id, stay_id, itemid, charttime, storetime, valuenum) |>
+    filter(itemid %in% !!item_ids) |>
+    inner_join(
+      icustays_tbl |>
+        select(stay_id, intime, outtime),
+      by = "stay_id"
+    ) |>
+    filter(storetime >= intime, storetime <= outtime)
+
+  # 每個 subject_id, stay_id, itemid 找最早的 storetime
+  earliest_time <- chartevents_raw |>
+    group_by(subject_id, stay_id, itemid) |>
+    summarise(first_storetime = min(storetime, na.rm = TRUE), .groups = "drop")
+
+  # 只保留最早 storetime 那些列；若 ties 存在就都保留
+  chartevents_first <- chartevents_raw |>
+    inner_join(
+      earliest_time,
+      by = c("subject_id", "stay_id", "itemid")
+    ) |>
+    filter(storetime == first_storetime)
+
+  # ties 的 valuenum 取平均，然後直接做寬表
+  chartevents_tbl <- chartevents_first |>
+    group_by(subject_id, stay_id) |>
+    summarise(
+      heart_rate = mean(case_when(itemid == 220045 ~ valuenum), na.rm = TRUE),
+      systolic_bp = mean(case_when(itemid == 220179 ~ valuenum), na.rm = TRUE),
+      diastolic_bp = mean(case_when(itemid == 220180 ~ valuenum), na.rm = TRUE),
+      temperature_c = mean(case_when(itemid == 223761 ~ valuenum), na.rm = TRUE),
+      respiratory_rate = mean(case_when(itemid == 220210 ~ valuenum), na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    arrange(subject_id, stay_id) |>
+    collect()
+
+print(chartevents_tbl, width = Inf)
+```
+
+```{r}
+services_tbl   <- tbl(con_bq, "services") |>
+  select(subject_id, hadm_id, curr_service) |>
+  print(width=inf)
+```
+
+
+
+putting things together
+
+
+
+```{r}
+mimic_core <- cohort |>
+  left_join(
+    admissions_tbl,
+    by = "hadm_id",
+    suffix = c("", "_adm")
+  ) |>
+  left_join(
+    patients_tbl,
+    by = "subject_id",
+    suffix = c("", "_pt")
+  ) |>
+  left_join(
+    icustays_tbl,
+    by = "stay_id",
+    suffix = c("", "_icust")
+  ) |>
+  left_join(
+    omr_features,
+    by = "subject_id",
+    suffix = c("", "_omr")
+  ) |>
+  left_join(
+    services_tbl,
+    by = "subject_id",
+    suffix = c("", "_serv")
+  )
+```
+
+```{r}
+mimic_icu_cohort <- mimic_core |>
+  left_join(labevents_tble,   by = "stay_id") |>
+  left_join(chartevents_tbl, by = "stay_id")
+
+print(mimic_icu_cohort, width = Inf)
+```
+
+
+
+
+
+
+
+
 
 
 
