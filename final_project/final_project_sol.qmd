@@ -1,0 +1,341 @@
+---
+title: "final_project_sol"
+format: html
+editor: visual
+---
+
+Display machine information:
+
+```{r}
+sessionInfo()
+```
+
+Display my machine memory.
+
+```{r}
+memuse::Sys.meminfo()
+```
+
+Load database libraries and the tidyverse frontend:
+
+```{r}
+library(bigrquery)
+library(dbplyr)
+library(DBI)
+library(gt)
+library(gtsummary)
+library(tidyverse)
+library(arrow)
+library(data.table)
+library(duckdb)
+library(memuse)
+library(pryr)
+library(R.utils)
+library(dplyr)
+```
+
+```{r}
+# path to the service account token 
+satoken <- "biostat-203b-2026-winter-92fefbfab477.json"
+# BigQuery authentication using service account
+bq_auth(path = satoken)
+```
+
+```{r}
+# connect to the BigQuery database `biostat-203b-2025-mimiciv_3_1`
+con_bq <- dbConnect(
+    bigrquery::bigquery(),
+    project = "biostat-203b-2025-winter",
+    dataset = "mimiciv_3_1",
+    billing = "biostat-203b-2025-winter"
+)
+con_bq
+```
+
+List all tables in the `mimiciv_3_1` database.
+
+```{r}
+dbListTables(con_bq)
+```
+
+## corhort
+
+```{r}
+proc_tbl <- tbl(con_bq, "procedureevents") |>
+  select(subject_id, hadm_id, stay_id, itemid, value, starttime, endtime) |>
+  print()
+```
+```{r}
+patients_tbl <- tbl(con_bq, "patients") |>
+  select(subject_id, gender, anchor_age) |>
+  arrange(subject_id) 
+```
+
+```{r}
+cohort_proc <- proc_tbl |>
+  filter(itemid == 225792) |>
+  inner_join(patients_tbl, by = "subject_id") |>
+  filter(!is.na(starttime), !is.na(endtime)) |>
+  filter(anchor_age >65) 
+```
+
+```{r}
+cohort_proc |>
+  summarise(
+    n_subject = n_distinct(subject_id),
+    n_hadm    = n_distinct(hadm_id),
+    n_stay    = n_distinct(stay_id)
+  ) |>
+  collect() |>
+  print(width = Inf)
+```
+
+
+
+## feature
+
+### admissions
+
+```{r}
+admissions_tbl <- tbl(con_bq, "admissions") |>
+  select(
+    subject_id, 
+    hadm_id, 
+    admission_type, 
+    admission_location, 
+    race, 
+    hospital_expire_flag
+    ) |>
+  arrange(subject_id, hadm_id) |>
+  print(width=inf)
+```
+
+### icustays
+
+```{r}
+icustays_tbl   <- tbl(con_bq, "icustays") |>
+  arrange(subject_id, stay_id) |>
+  print(width=inf)
+```
+
+### omr
+
+
+```{r}
+omr_tbl <- tbl(con_bq, "omr") |>
+  arrange(subject_id) |>
+  print(width=inf)
+```
+
+```{r}
+vent_anchor_subj <- proc_tbl |>
+  filter(itemid == 225792) |>
+  filter(!is.na(starttime)) |>
+  group_by(subject_id) |>
+  summarise(vent_start = min(starttime), .groups = "drop")
+
+omr_bp_bmi <- omr_tbl |>
+  filter(result_name %in% c("BMI (kg/m2)", "Blood Pressure"))
+
+# Use COUNTIF instead of max(as.integer(bool))
+omr_days_both <- omr_bp_bmi |>
+  group_by(subject_id, chartdate) |>
+  summarise(
+    bmi_cnt = sql("COUNTIF(result_name = 'BMI (kg/m2)')"),
+    bp_cnt  = sql("COUNTIF(result_name = 'Blood Pressure')"),
+    .groups = "drop"
+  ) |>
+  filter(bmi_cnt > 0, bp_cnt > 0)
+
+best_day <- vent_anchor_subj |>
+  inner_join(omr_days_both, by = "subject_id") |>
+  mutate(
+    rn = sql("
+      ROW_NUMBER() OVER (
+        PARTITION BY subject_id
+        ORDER BY
+          ABS(DATETIME_DIFF(DATETIME(chartdate), DATETIME(vent_start), SECOND)) ASC,
+          chartdate DESC
+      )
+    ")
+  ) |>
+  filter(rn == 1) |>
+  select(subject_id, omr_date = chartdate)
+
+omr_bestday_long <- omr_bp_bmi |>
+  inner_join(best_day, by = "subject_id") |>
+  filter(chartdate == omr_date) |>
+  mutate(
+    rn2 = sql("
+      ROW_NUMBER() OVER (
+        PARTITION BY subject_id, result_name
+        ORDER BY seq_num DESC
+      )
+    ")
+  ) |>
+  filter(rn2 == 1) |>
+  select(subject_id, omr_date, result_name, result_value)
+
+omr_features <- omr_bestday_long |>
+  group_by(subject_id) |>
+  summarise(
+    omr_date = max(omr_date),
+    bmi = sql("MAX(IF(result_name='BMI (kg/m2)', SAFE_CAST(result_value AS FLOAT64), NULL))"),
+    bp_raw = sql("MAX(IF(result_name='Blood Pressure', result_value, NULL))"),
+    sbp = sql("MAX(IF(result_name='Blood Pressure', SAFE_CAST(SPLIT(result_value,'/')[OFFSET(0)] AS FLOAT64), NULL))"),
+    dbp = sql("MAX(IF(result_name='Blood Pressure', SAFE_CAST(SPLIT(result_value,'/')[OFFSET(1)] AS FLOAT64), NULL))"),
+    .groups = "drop"
+  ) |>
+  print()
+
+# QC (optional)
+omr_features |>
+  summarise(n = n(), n_subj = n_distinct(subject_id)) |>
+  collect()
+```
+
+### labevents
+
+```{bash}
+zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i Nitrogen
+```
+
+```{r}
+lab_items <- c(
+   51006, 50912, 50971, 50983
+  )
+
+labevents_tble <- tbl(con_bq, "labevents") |>
+  filter(itemid %in% lab_items) |>
+  inner_join(
+    cohort_proc |>
+      group_by(subject_id) |>
+      summarise(
+        vent_start = min(starttime),
+        .groups = "drop"
+      ),
+    by = "subject_id"
+  ) |>
+  filter(!is.na(storetime)) |>
+  filter(sql("DATETIME(storetime)") <= vent_start) |>
+  group_by(subject_id, itemid) |>
+  mutate(last_storetime = max(storetime)) |>
+  ungroup() |>
+  filter(storetime == last_storetime) |>
+  group_by(subject_id, itemid) |>
+  summarise(
+    valuenum = avg(valuenum),   # <-- no na.rm
+    .groups = "drop"
+  ) |>
+  group_by(subject_id) |>
+  summarise(
+    UreaNitrogen = sql("MAX(IF(itemid=51006, valuenum, NULL))"),
+    creatinine   = sql("MAX(IF(itemid=50912, valuenum, NULL))"),
+    potassium    = sql("MAX(IF(itemid=50971, valuenum, NULL))"),
+    sodium       = sql("MAX(IF(itemid=50983, valuenum, NULL))"),
+    .groups = "drop"
+  ) |>
+  print()
+```
+
+
+### chartevents
+
+```{r}
+d_items_tbl <- tbl(con_bq, "d_items")
+```
+
+```{r}
+chart_items <- c(
+    220045,   # heart rate
+    220179,   # systolic_bp
+    220180,   # diastolic_bp
+    223761,   # temperature_c
+    220210    # respiratory_rate
+  ) 
+
+chartevents_tble <- tbl(con_bq, "chartevents") |>
+  # 1) restrict to cohort stays + bring in anchor time (starttime)
+  inner_join(
+    cohort_proc |>
+      select(stay_id, starttime),  # <- 若你的欄名不同，改這行
+    by = "stay_id"
+  ) |>
+  # 2) keep target vitals only
+  filter(itemid %in% chart_items) |>
+  filter(!is.na(storetime), !is.na(valuenum)) |>
+  # 3) keep events at/after starttime
+  #    storetime is usually TIMESTAMP; starttime may be DATETIME -> cast storetime to DATETIME
+  filter(sql("DATETIME(storetime)") >= starttime) |>
+  # 4) find first storetime per stay_id x itemid
+  group_by(stay_id, itemid) |>
+  mutate(first_storetime = min(storetime)) |>
+  ungroup() |>
+  filter(storetime == first_storetime) |>
+  # 5) average ties at first storetime
+  group_by(stay_id, itemid) |>
+  summarise(
+    valuenum = avg(valuenum),   # BigQuery AVG ignores NULL; don't use na.rm
+    .groups = "drop"
+  ) |>
+  # 6) pivot to wide columns (one row per stay_id)
+  group_by(stay_id) |>
+  summarise(
+    heart_rate       = sql("MAX(IF(itemid=220045, valuenum, NULL))"),
+    systolic_bp      = sql("MAX(IF(itemid=220179, valuenum, NULL))"),
+    diastolic_bp     = sql("MAX(IF(itemid=220180, valuenum, NULL))"),
+    temperature_c    = sql("MAX(IF(itemid=223761, valuenum, NULL))"),
+    respiratory_rate = sql("MAX(IF(itemid=220210, valuenum, NULL))"),
+    .groups = "drop"
+  ) |>
+  print()
+```
+  
+  
+  
+  
+  
+```{r}
+services_tbl   <- tbl(con_bq, "services") |>
+  select(subject_id, hadm_id, curr_service) |>
+  print(width=inf)
+```
+
+### putting things together
+
+```{r}
+mimic_core <- cohort |>
+  left_join(
+    admissions_tbl,
+    by = "hadm_id",
+    suffix = c("", "_adm")
+  ) |>
+  left_join(
+    patients_tbl,
+    by = "subject_id",
+    suffix = c("", "_pt")
+  ) |>
+  left_join(
+    icustays_tbl,
+    by = "stay_id",
+    suffix = c("", "_icust")
+  ) |>
+  left_join(
+    omr_features,
+    by = "subject_id",
+    suffix = c("", "_omr")
+  ) |>
+  left_join(
+    services_tbl,
+    by = "subject_id",
+    suffix = c("", "_serv")
+  )
+```
+
+```{r}
+mimic_icu_cohort <- mimic_core |>
+  left_join(labevents_tble,   by = "stay_id") |>
+  left_join(chartevents_tbl, by = "stay_id")
+
+print(mimic_icu_cohort, width = Inf)
+```
