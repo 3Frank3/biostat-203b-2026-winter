@@ -199,7 +199,7 @@ icustays_tbl   <- tbl(con_bq, "icustays") |>
 
 
 ```{r}
-omr_tbl <- tbl(con_bq, "omr") |>
+omr_raw <- tbl(con_bq, "omr") |>
   arrange(subject_id) |>
   print(width=inf)
 ```
@@ -209,7 +209,7 @@ omr_tbl <- tbl(con_bq, "omr") |>
 omr_base <- cohort_tbl |>
   select(stay_id, subject_id, vent_start = vent_start) |>
   inner_join(
-    omr_tbl |>
+    omr_raw |>
       filter(result_name %in% c("BMI (kg/m2)", "Blood Pressure")),
     by = "subject_id"
   ) |>
@@ -249,7 +249,6 @@ omr_bp_near <- omr_base |>
   filter(rn == 1) |>
   transmute(
     stay_id,
-    bp_raw = result_value,
     sbp = sql("SAFE_CAST(SPLIT(result_value,'/')[OFFSET(0)] AS FLOAT64)"),
     dbp = sql("SAFE_CAST(SPLIT(result_value,'/')[OFFSET(1)] AS FLOAT64)")
   )
@@ -272,51 +271,86 @@ omr_tbl |>
   collect()
 ```
 
-
-
 ### labevents
 
 ```{bash}
-zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i Nitrogen
+zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i Alveolar
+```
+```{bash}
+zcat < ~/mimic/hosp/labevents.csv.gz \
+| awk -F, 'NR==1 || $5==50801' \
+| head -20
+```
+
+```{r}
+d_labitems_tbl <- tbl(con_bq, "d_labitems") |>
+  select(itemid, label, fluid, category) 
 ```
 
 ```{r}
 lab_items <- c(
-   51006, 50912, 50971, 50983
+   51006, 50912, 50971, 50983, 50802, 50803, 50818, 50821, 50801
   )
-
-labevents_tbl <- tbl(con_bq, "labevents") |>
-  filter(itemid %in% lab_items) |>
-  
-  inner_join(
-    cohort_proc |>
-      select(subject_id, hadm_id, stay_id, vent_start = starttime),
-    by = c("subject_id", "hadm_id")
-  ) |>
-  filter(!is.na(storetime), !is.na(valuenum)) |>
-  
-
-  filter(sql("DATETIME(storetime)") <= vent_start) |>
-  group_by(stay_id, itemid) |>
-  mutate(last_storetime = max(storetime)) |>
-  ungroup() |>
-  filter(storetime == last_storetime) |>
-
-  # avg
-  group_by(stay_id, itemid) |>
-  summarise(valuenum = avg(valuenum), .groups = "drop") |>
-  
-  group_by(stay_id) |>
-  summarise(
-    UreaNitrogen = sql("MAX(IF(itemid=51006, valuenum, NULL))"),
-    creatinine   = sql("MAX(IF(itemid=50912, valuenum, NULL))"),
-    potassium    = sql("MAX(IF(itemid=50971, valuenum, NULL))"),
-    sodium       = sql("MAX(IF(itemid=50983, valuenum, NULL))"),
-    .groups = "drop"
-  ) |>
-  print()
 ```
 
+```{r}
+lookback_hours <- 72
+
+# --- 1) build itemid -> column-name map (small, safe to collect) ---
+lab_map <- d_labitems_tbl |>
+  filter(itemid %in% lab_items) |>
+  select(itemid, label) |>
+  collect() |>
+  mutate(
+    # clean labels into valid column names
+    col = label |>
+      str_to_lower() |>
+      str_replace_all("[^a-z0-9]+", "_") |>
+      str_replace_all("^_|_$", "")
+  )
+
+# ensure uniqueness if labels collide
+lab_map$col <- make.unique(lab_map$col, sep = "_")
+
+# keep the order matching lab_items (optional)
+lab_map <- lab_map |>
+  mutate(ord = match(itemid, lab_items)) |>
+  arrange(ord)
+
+# --- 2) build dynamic summarise() expressions for pivoting ---
+pivot_exprs <- set_names(
+  lapply(lab_map$itemid, function(id) sql(sprintf("MAX(IF(itemid=%d, valuenum, NULL))", id))),
+  lab_map$col
+)
+
+# --- 3) main query: last pre-vent lab within lookback window, then wide ---
+labevents_tbl <- tbl(con_bq, "labevents") |>
+  filter(itemid %in% lab_items) |>
+  filter(!is.na(valuenum), !is.na(charttime)) |>
+  inner_join(
+    cohort_tbl |> select(subject_id, hadm_id, stay_id, vent_start),
+    by = c("subject_id", "hadm_id")
+  ) |>
+  # window: [vent_start - lookback_hours, vent_start]
+  filter(sql("DATETIME(charttime)") <= vent_start) |>
+  filter(sql(paste0("DATETIME(charttime) >= DATETIME_SUB(vent_start, INTERVAL ", lookback_hours, " HOUR)"))) |>
+  # last charttime per stay_id x itemid
+  group_by(stay_id, itemid) |>
+  mutate(last_t = max(charttime)) |>
+  ungroup() |>
+  filter(charttime == last_t) |>
+  # average ties at the last time
+  group_by(stay_id, itemid) |>
+  summarise(valuenum = avg(valuenum), .groups = "drop") |>
+  # pivot to wide using auto-generated column names
+  group_by(stay_id) |>
+  summarise(!!!pivot_exprs, .groups = "drop")
+```
+
+```{r}
+labevents_tbl |>
+  print()
+```
 
 ### chartevents
 
@@ -330,31 +364,29 @@ chart_items <- c(
     220179,   # systolic_bp
     220180,   # diastolic_bp
     223761,   # temperature_c
-    220210    # respiratory_rate
+    220210,   # respiratory_rate
+    220228    # hemoglobin 
   ) 
 
 chartevents_tbl <- tbl(con_bq, "chartevents") |>
   # 1) restrict to cohort stays + bring in anchor time (starttime)
   inner_join(
-    cohort_proc |>
-      select(stay_id, starttime),  
-    by = "stay_id"
-  ) |>
-  # 2) keep target vitals only
+    cohort_tbl |>
+      select(stay_id, vent_start), by = "stay_id") |>
   filter(itemid %in% chart_items) |>
   filter(!is.na(storetime), !is.na(valuenum)) |>
-  # 3) keep events at/after starttime
-  #    storetime is usually TIMESTAMP; starttime may be DATETIME -> cast storetime to DATETIME
-  filter(sql("DATETIME(storetime)") <= starttime) |>
-  # 4) find first storetime per stay_id x itemid
+  filter(sql("DATETIME(storetime)") <= 
+      sql("DATETIME_ADD(vent_start, INTERVAL 6 HOUR)")) |>
+  
   group_by(stay_id, itemid) |>
-  mutate(first_storetime = min(storetime)) |>
+  mutate(last_storetime = max(storetime)) |>
   ungroup() |>
-  filter(storetime == first_storetime) |>
+  filter(storetime == last_storetime) |>
+  
   # 5) average ties at first storetime
   group_by(stay_id, itemid) |>
   summarise(
-    valuenum = avg(valuenum),   # BigQuery AVG ignores NULL; don't use na.rm
+    valuenum = avg(valuenum), 
     .groups = "drop"
   ) |>
   # 6) pivot to wide columns (one row per stay_id)
@@ -365,35 +397,16 @@ chartevents_tbl <- tbl(con_bq, "chartevents") |>
     diastolic_bp     = sql("MAX(IF(itemid=220180, valuenum, NULL))"),
     temperature_c    = sql("MAX(IF(itemid=223761, valuenum, NULL))"),
     respiratory_rate = sql("MAX(IF(itemid=220210, valuenum, NULL))"),
-    .groups = "drop"
-  ) |>
-  print()
-```
-
-### services
-
-```{r}
-services_base <- tbl(con_bq, "services") |>
-  select(subject_id, hadm_id, transfertime, curr_service)
-```
-
-```{r}
-services_last_time <- services_base |>
-  group_by(subject_id, hadm_id) |>
-  summarise(
-    last_transfertime = max(transfertime),
-    .groups = "drop"
-  )
-
-services_tbl <- services_base |>
-  inner_join(services_last_time, by = c("subject_id","hadm_id")) |>
-  filter(transfertime == last_transfertime) |>
-  group_by(subject_id, hadm_id) |>
-  summarise(
-    curr_service = sql("ANY_VALUE(curr_service)"),
+    hemoglobin       = sql("MAX(IF(itemid=220228, valuenum, NULL))"),
     .groups = "drop"
   )
 ```
+
+```{r}
+chartevents_tbl |>
+  print(width=inf)
+```
+
 
 ## putting things together
 
@@ -401,18 +414,58 @@ services_tbl <- services_base |>
 model_tbl <- cohort_tbl |>
   left_join(admissions_tbl, by = c("subject_id","hadm_id")) |>
   left_join(patients_tbl,   by = "subject_id") |>
-  left_join(icustays_tbl |> select(stay_id, intime, outtime, first_careunit, last_careunit),
+  left_join(icustays_tbl |> select(stay_id, first_careunit, last_careunit),
             by = "stay_id") |>
   left_join(omr_tbl,   by = "stay_id") |>
-  left_join(services_tbl,   by = c("subject_id","hadm_id")) |>
   left_join(labevents_tbl,  by = "stay_id") |>
   left_join(chartevents_tbl,by = "stay_id") |>
   arrange(subject_id) |>
   collect() |>
-  print(width =inf) 
+  glimpse() 
 ```
 
 
+```{r}
+
+tbl1 <- model_tbl |>
+  # 只保留你想放進 table 的欄位（避免把 ID/time/leakage 放進去）
+  select(
+    y_prolong,
+    anchor_age, gender, race,
+    first_careunit, last_careunit,
+    admission_type, admission_location,
+    urea_nitrogen, creatinine, potassium,
+    sodium, pco2, po2, alveolar_arterial_gradient,  
+    calculated_bicarbonate_whole_blood, base_excess,
+    heart_rate, systolic_bp, diastolic_bp, 
+    temperature_c, respiratory_rate, hemoglobin
+  ) |>
+  mutate(
+    y_prolong = factor(y_prolong, levels = c(0, 1), labels = c("<= 2 days", "> 2 days"))
+  ) |>
+  tbl_summary(
+    by = y_prolong,
+    statistic = list(
+      all_continuous() ~ "{median} ({p25}, {p75})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = all_continuous() ~ 2,
+    missing = "no"
+  ) |>
+  add_p(test = list(
+    all_continuous() ~ "wilcox.test",
+    all_categorical() ~ "chisq.test"
+  )) |>
+  add_overall() |>
+  bold_labels()
+
+tbl1
+
+tbl1_gt <- tbl1 |>
+  as_gt()
+
+gtsave(tbl1_gt, "mimic_vent_cohort_summary.html")
+```
 
 
 ```{r}
@@ -438,53 +491,34 @@ check_keys(model_tbl,   "after all joins")
 miss_tbl <- model_tbl |>
   summarise(
     n = n(),
+    miss_urea = mean(is.na(urea_nitrogen)),
+    miss_cr   = mean(is.na(creatinine)),
+    miss_k    = mean(is.na(potassium)),
+    miss_na   = mean(is.na(sodium)),
+    miss_hr   = mean(is.na(heart_rate)),
+    miss_sbp  = mean(is.na(systolic_bp)),
+    miss_dbp  = mean(is.na(diastolic_bp)),
+    miss_temp = mean(is.na(temperature_c)),
+    miss_rr   = mean(is.na(respiratory_rate)),
+    miss_bg   = mean(is.na(hemoglobin)),
+    miss_pco2 = mean(is.na(pco2)),
+    miss_po2  = mean(is.na(po2)),
+    miss_aag  = mean(is.na(alveolar_arterial_gradient)),
+    miss_cbwb = mean(is.na(calculated_bicarbonate_whole_blood)),
+    miss_be   = mean(is.na(base_excess))
+  )
 
-    miss_urea = sql("AVG(IF(UreaNitrogen IS NULL, 1, 0))"),
-    miss_cr   = sql("AVG(IF(creatinine IS NULL, 1, 0))"),
-    miss_k    = sql("AVG(IF(potassium IS NULL, 1, 0))"),
-    miss_na   = sql("AVG(IF(sodium IS NULL, 1, 0))"),
-
-    miss_hr   = sql("AVG(IF(heart_rate IS NULL, 1, 0))"),
-    miss_sbp  = sql("AVG(IF(systolic_bp IS NULL, 1, 0))"),
-    miss_dbp  = sql("AVG(IF(diastolic_bp IS NULL, 1, 0))"),
-    miss_temp = sql("AVG(IF(temperature_c IS NULL, 1, 0))"),
-    miss_rr   = sql("AVG(IF(respiratory_rate IS NULL, 1, 0))")
-  ) |>
-  collect()
 miss_tbl
 
 ```
-```{r}
-model_local <- model_tbl |>
-  select(
-    stay_id, subject_id, y_prolong,
-    anchor_age, gender, race,
-    hospital_expire_flag,
-    UreaNitrogen, creatinine, potassium, sodium,
-    heart_rate, systolic_bp, diastolic_bp, temperature_c, respiratory_rate,
-    bmi, sbp, dbp
-  ) |>
-  collect()
-```
 
-
-```{r}
-miss_rate <- sapply(model_local, function(x) mean(is.na(x)))
-miss_rate <- sort(miss_rate, decreasing = TRUE)
-miss_rate
-```
-
-
-
-
-## prep
+## model prep
 
 ```{r}
 df <- model_tbl |>
   mutate(y_prolong = factor(y_prolong, levels = c(0, 1))) |>
   select(-any_of(c(
     "stay_id","subject_id","hadm_id",
-    "intime","outtime",
     "vent_start","vent_end","vent_start_min","vent_end_max",
     "n_vent_events",
     "omr_date","bp_raw",
@@ -495,7 +529,7 @@ df <- model_tbl |>
 
 # spilt
 set.seed(203)
-split_obj <- initial_split(df, prop = 0.8, strata = y_prolong)
+split_obj <- initial_split(df, prop = 0.75, strata = y_prolong)
 train_df  <- training(split_obj)
 test_df   <- testing(split_obj)
 
@@ -525,7 +559,7 @@ logit_mod <-
     penalty = tune(), 
     mixture = tune()
   ) |>
-  set_engine("glmnet", standardize = FALSE) |>
+  set_engine("glmnet") |>
   print()
 
 logit_wf <- workflow() |>
@@ -671,6 +705,7 @@ rf_param_grid <- grid_regular(
   levels = c(5, 5)
   )
 rf_param_grid
+
 ```
 
 ### CV
