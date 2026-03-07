@@ -117,6 +117,7 @@ cohort_tbl |>
 
 ## feature
 
+
 ### admissions
 
 ```{r}
@@ -424,6 +425,7 @@ miss_rate
 ## modeling
 
 ### prep
+
 ```{r}
 df <- model_tbl |>
   mutate(y_prolong = factor(y_prolong, levels = c(0, 1))) |>
@@ -447,85 +449,122 @@ test_df   <- testing(split_obj)
 dim(train_df)
 dim(test_df)
 
-set.seed(203)
-folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
 ```
 
 
 ### Recipe: missing indicator + median impute
 ```{r}
-rec <- recipe(y_prolong ~ ., data = train_df) |>
+logit_recipe <- recipe(y_prolong ~ ., data = train_df) |>
   step_zv(all_predictors()) |>
   step_string2factor(all_nominal_predictors()) |>
   step_unknown(all_nominal_predictors(), new_level = "Unknown") |>
   step_indicate_na(all_numeric_predictors()) |>
   step_impute_median(all_numeric_predictors()) |>
-  step_dummy(all_nominal_predictors(), one_hot = TRUE)
+  step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
+  print()
 ```
 
 ### Model + workflow
 ```{r}
-log_spec <- logistic_reg() |>
-  set_engine("glm")
+logit_mod <- 
+  logistic_reg(
+    penalty = tune(), 
+    mixture = tune()
+  ) |>
+  set_engine("glmnet", standardize = FALSE) |>
+  print()
 
-wf <- workflow() |>
-  add_recipe(rec) |>
-  add_model(log_spec)
+logit_wf <- workflow() |>
+  add_recipe(logit_recipe) |>
+  add_model(logit_mod) |>
+  print()
 
-metrics <- metric_set(roc_auc, pr_auc)
 ```
 
-### CV performance (train only)
+### Tuning grid
 ```{r}
-cv_res <- fit_resamples(
-  wf, resamples = folds,
-  metrics = metrics,
-  control = control_resamples(save_pred = TRUE)
-)
-
-collect_metrics(cv_res)
+param_grid <- grid_regular(
+  penalty(range = c(-6, 3)), 
+  mixture(),
+  levels = c(100, 5)
+  ) |>
+  print()
 ```
 
-### Test performance + Brier score
+
+### CV 
 ```{r}
-final_res <- last_fit(wf, split_obj, metrics = metrics)
+# Set cross-validation partitions.
+set.seed(203)
 
-collect_metrics(final_res)
+folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
+folds
 
-pred_test <- collect_predictions(final_res) |>
-  mutate(y01 = as.integer(y_prolong == "1"),
-         brier = (.pred_1 - y01)^2)
-
-mean(pred_test$brier)
+# Fit cross-validation.
+(logit_fit <- logit_wf |>
+  tune_grid(
+    resamples = folds,
+    grid = param_grid,
+    metrics = metric_set(roc_auc, accuracy)
+    )) |>
+  system.time()
 ```
-### model metrix
 
 ```{r}
-
-metrics <- metric_set(roc_auc, pr_auc, accuracy, bal_accuracy)
-
-cv_res <- fit_resamples(
-  wf, resamples = folds,
-  metrics = metrics,
-  control = control_resamples(save_pred = TRUE)
-)
-
-final_res <- last_fit(wf, split_obj, metrics = metrics)
-
-pred_test <- collect_predictions(final_res)
-
-pred_test |>
-  accuracy(truth = y_prolong, estimate = .pred_class)
-
-pred_test |>
-  bal_accuracy(truth = y_prolong, estimate = .pred_class)
-
-
-
-pred_test <- collect_predictions(final_res)
-
-pred_test |>
-  group_by(y_prolong) |>
-  summarise(mean_pred1 = mean(.pred_1), n = n())
+logit_fit
 ```
 
+### Visualize CV results
+```{r}
+logit_fit |>
+  # aggregate metrics from K folds
+  collect_metrics() |>
+  print(width = Inf) |>
+  filter(.metric == "roc_auc") |>
+  ggplot(mapping = aes(x = penalty, y = mean, color = factor(mixture))) +
+  geom_point() +
+  labs(x = "Penalty", y = "CV AUC") +
+  scale_x_log10()
+```
+
+### Show the top 5 models
+
+```{r}
+logit_fit |>
+  show_best(metric = "roc_auc")
+
+```
+
+
+### Select the best model.
+
+```{r}
+best_logit <- logit_fit |>
+  select_best(metric = "roc_auc")
+best_logit
+```
+
+## Finalize model
+
+### Final workflow
+
+```{r}
+final_wf <- logit_wf |>
+  finalize_workflow(best_logit)
+final_wf
+```
+
+
+### Fit the whole training set, then predict the test cases
+
+```{r}
+final_fit <- 
+  final_wf |>
+  last_fit(split_obj)
+final_fit
+```
+### Test metrics
+```{r}
+final_fit |> 
+  collect_metrics()
+```
