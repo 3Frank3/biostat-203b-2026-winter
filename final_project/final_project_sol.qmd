@@ -33,6 +33,8 @@ library(pryr)
 library(R.utils)
 library(dplyr)
 library(tidymodels)
+library(ranger)
+library(GGally)
 ```
 
 ```{r}
@@ -75,31 +77,75 @@ patients_tbl <- tbl(con_bq, "patients") |>
 ```{r}
 cohort_proc <- proc_tbl |>
   filter(itemid == 225792) |>
-  inner_join(patients_tbl, by = "subject_id") |>
   filter(!is.na(starttime), !is.na(endtime)) |>
-  filter(anchor_age >65) 
-```
+  inner_join(patients_tbl |> 
+  select(subject_id, anchor_age), by = "subject_id") |>
+  filter(anchor_age > 65)
 
-
-```{r}
-cohort_tbl <- cohort_proc |>
-   mutate(
-    dur_sec = sql("DATETIME_DIFF(endtime, starttime, SECOND)"),
-    dur_hr  = dur_sec / 3600.0
-  ) |>
-  filter(dur_hr >= 0) |>
+stay_map <- cohort_proc |>
   group_by(stay_id) |>
   summarise(
-    subject_id = min(subject_id),
-    hadm_id    = min(hadm_id),
-    vent_start = min(starttime),
-    vent_end   = max(endtime),
-    vent_hr    = sum(dur_hr),
-    n_vent_events = n(),
-    y_prolong = sql(paste0("CAST(SUM(dur_hr) > ", 72, " AS INT64)")),
+    subject_id = min(subject_id), 
+    hadm_id = min(hadm_id), 
+    .groups = "drop"
+    )
+```
+
+divide group
+```{r}
+x1 <- cohort_proc |>
+  mutate(start_dt = starttime, end_dt = endtime) |>
+  filter(end_dt >= start_dt) |>
+  mutate(
+    run_end = sql("
+      MAX(end_dt) OVER (
+        PARTITION BY stay_id
+        ORDER BY start_dt, end_dt
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      )
+    ")
+  )
+
+x2 <- x1 |>
+  mutate(
+    prev_run_end = sql("
+      LAG(run_end) OVER (
+        PARTITION BY stay_id
+        ORDER BY start_dt, end_dt
+      )
+    ")
+  )
+
+x3 <- x2 |>
+  mutate(
+    grp_id = sql("
+      SUM(IF(prev_run_end IS NULL OR start_dt > prev_run_end, 1, 0))
+      OVER (PARTITION BY stay_id ORDER BY start_dt, end_dt)
+    ")
+  )
+```
+
+```{r}
+cut_hr <- 48
+
+cohort_tbl <- x3 |>
+  group_by(stay_id, grp_id) |>
+  summarise(
+    grp_start = min(start_dt),
+    grp_end   = max(end_dt),
     .groups = "drop"
   ) |>
-  print()
+  mutate(grp_hr = sql("DATETIME_DIFF(grp_end, grp_start, SECOND)") / 3600.0) |>
+  group_by(stay_id) |>
+  summarise(
+    vent_start = min(grp_start),
+    vent_end   = max(grp_end),
+    vent_hr    = sum(grp_hr),
+    n_vent_segments = n(),
+    y_prolong  = sql(paste0("CAST(SUM(grp_hr) > ", cut_hr, " AS INT64)")),
+    .groups = "drop"
+  ) |>
+  left_join(stay_map, by = "stay_id")
 ```
 
 ```{r}
@@ -112,6 +158,13 @@ cohort_tbl |>
   ) |>
   collect()
 ```
+
+```{r}
+cohort_tbl |>
+  head(20) |>
+  collect()
+```
+
 
 
 
@@ -292,7 +345,7 @@ chartevents_tbl <- tbl(con_bq, "chartevents") |>
   filter(!is.na(storetime), !is.na(valuenum)) |>
   # 3) keep events at/after starttime
   #    storetime is usually TIMESTAMP; starttime may be DATETIME -> cast storetime to DATETIME
-  filter(sql("DATETIME(storetime)") >= starttime) |>
+  filter(sql("DATETIME(storetime)") <= starttime) |>
   # 4) find first storetime per stay_id x itemid
   group_by(stay_id, itemid) |>
   mutate(first_storetime = min(storetime)) |>
@@ -422,9 +475,9 @@ miss_rate
 ```
 
 
-## modeling
 
-### prep
+
+## prep
 
 ```{r}
 df <- model_tbl |>
@@ -451,6 +504,7 @@ dim(test_df)
 
 ```
 
+## Logit modeling
 
 ### Recipe: missing indicator + median impute
 ```{r}
@@ -483,7 +537,7 @@ logit_wf <- workflow() |>
 
 ### Tuning grid
 ```{r}
-param_grid <- grid_regular(
+logit_param_grid <- grid_regular(
   penalty(range = c(-6, 3)), 
   mixture(),
   levels = c(100, 5)
@@ -497,14 +551,14 @@ param_grid <- grid_regular(
 # Set cross-validation partitions.
 set.seed(203)
 
-folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
-folds
+logit_folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
+logit_folds
 
 # Fit cross-validation.
 (logit_fit <- logit_wf |>
   tune_grid(
-    resamples = folds,
-    grid = param_grid,
+    resamples = logit_folds,
+    grid = logit_param_grid,
     metrics = metric_set(roc_auc, accuracy)
     )) |>
   system.time()
@@ -549,22 +603,137 @@ best_logit
 ### Final workflow
 
 ```{r}
-final_wf <- logit_wf |>
+logit_final_wf <- logit_wf |>
   finalize_workflow(best_logit)
-final_wf
+logit_final_wf
 ```
 
 
 ### Fit the whole training set, then predict the test cases
 
 ```{r}
-final_fit <- 
-  final_wf |>
+logit_final_fit <- 
+  logit_final_wf |>
   last_fit(split_obj)
-final_fit
+logit_final_fit
 ```
 ### Test metrics
 ```{r}
-final_fit |> 
+logit_final_fit |> 
   collect_metrics()
 ```
+
+
+
+## RF modeling
+
+### Recipe
+
+```{r}
+rf_recipe <- recipe(y_prolong ~ ., data = train_df) |>
+  step_zv(all_predictors()) |>
+  step_string2factor(all_nominal_predictors()) |>
+  step_unknown(all_nominal_predictors(), new_level = "Unknown") |>
+  step_indicate_na(all_numeric_predictors()) |>
+  step_impute_median(all_numeric_predictors()) |>
+  step_dummy(all_nominal_predictors(), one_hot = TRUE)
+```
+
+
+### model 
+
+```{r}
+rf_mod <- 
+  rand_forest(
+    mode = "classification",
+    # Number of predictors randomly sampled in each split
+    mtry = tune(),
+    # Number of trees in ensemble
+    trees = tune()
+  ) |> 
+  set_engine("ranger")
+rf_mod
+```
+
+### Workflow
+
+```{r}
+rf_wf <- workflow() |>
+  add_recipe(rf_recipe) |>
+  add_model(rf_mod)
+rf_wf
+```
+
+### tuning grid
+
+```{r}
+rf_param_grid <- grid_regular(
+  trees(range = c(100L, 500L)), 
+  mtry(range = c(1L, 5L)),
+  levels = c(5, 5)
+  )
+rf_param_grid
+```
+
+### CV
+
+```{r}
+ # Set cross-validation partitions.
+set.seed(203)
+
+rf_folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
+rf_folds
+
+rf_fit <- rf_wf |>
+  tune_grid(
+    resamples = rf_folds,
+    grid = rf_param_grid,
+    metrics = metric_set(roc_auc, accuracy)
+    )
+rf_fit
+```
+
+```{r}
+rf_fit |>
+  collect_metrics() |>
+  print(width = Inf) |>
+  filter(.metric == "roc_auc") |>
+  ggplot(mapping = aes(x = trees, y = mean, color = factor(mtry))) +
+  geom_point() + 
+  # geom_line() + 
+  labs(x = "Num. of Trees", y = "CV AUC")
+```
+
+
+### Show the top 5 models.
+
+```{r}
+rf_fit |>
+  show_best(metric = "roc_auc")
+```
+
+### select best model
+```{r}
+best_rf <- rf_fit |>
+  select_best(metric = "roc_auc")
+best_rf
+```
+
+```{r}
+rf_final_wf <- rf_wf |>
+  finalize_workflow(best_rf)
+rf_final_wf
+```
+
+```{r}
+rf_final_fit <- 
+  rf_final_wf |>
+  last_fit(split_obj)
+rf_final_fit
+```
+
+```{r}
+rf_final_fit |> 
+  collect_metrics()
+```
+
