@@ -598,9 +598,7 @@ best_logit <- logit_fit |>
 best_logit
 ```
 
-## Finalize model
-
-### Final workflow
+### Logit Final workflow
 
 ```{r}
 logit_final_wf <- logit_wf |>
@@ -693,6 +691,8 @@ rf_fit <- rf_wf |>
 rf_fit
 ```
 
+### Visualize CV results
+
 ```{r}
 rf_fit |>
   collect_metrics() |>
@@ -713,11 +713,14 @@ rf_fit |>
 ```
 
 ### select best model
+
 ```{r}
 best_rf <- rf_fit |>
   select_best(metric = "roc_auc")
 best_rf
 ```
+
+### RF Final workflow
 
 ```{r}
 rf_final_wf <- rf_wf |>
@@ -725,12 +728,16 @@ rf_final_wf <- rf_wf |>
 rf_final_wf
 ```
 
+### Fit the whole training set, then predict the test cases
+
 ```{r}
 rf_final_fit <- 
   rf_final_wf |>
   last_fit(split_obj)
 rf_final_fit
 ```
+
+### Test metrics
 
 ```{r}
 rf_final_fit |> 
