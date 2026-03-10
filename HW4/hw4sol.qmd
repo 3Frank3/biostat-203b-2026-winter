@@ -135,8 +135,14 @@ labevents_tble <- tbl(con_bq, "labevents") |>
 
 Connect to `chartevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the chart events listed in HW3. Only keep the first chart events (by `storetime`) during ICU stay and pivot chart events to become variables/columns. Write all steps in _one_ chain of pipes. Similary to HW3, if a vital has multiple measurements at the first `storetime`, average them.
 ```{r}
-# # TODO
-# chartevents_tble <- 
+vital_items <- c(220045, 220179, 220180, 223761, 220210)
+
+chartevents_tble <- tbl(con_bq, "chartevents") |>
+  select(subject_id, stay_id, itemid, charttime, storetime, valuenum) |>
+  filter(itemid %in% vital_items) |>
+  left_join(icustays_tble, by = "stay_id", ) |>
+  
+  
 ```
 
 ### Q1.7 Put things together
