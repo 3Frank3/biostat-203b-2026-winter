@@ -529,7 +529,7 @@ df <- model_tbl |>
 
 # spilt
 set.seed(203)
-split_obj <- initial_split(df, prop = 0.75, strata = y_prolong)
+split_obj <- initial_split(df, prop = 0.5, strata = y_prolong) # 0.5 cuz large data
 train_df  <- training(split_obj)
 test_df   <- testing(split_obj)
 
