@@ -26,6 +26,8 @@ Load database libraries and the tidyverse frontend:
 ```{r}
 library(bigrquery)
 library(dbplyr)
+library(dplyr)
+library(tidyr)
 library(DBI)
 library(gt)
 library(gtsummary)
@@ -135,13 +137,57 @@ labevents_tble <- tbl(con_bq, "labevents") |>
 
 Connect to `chartevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the chart events listed in HW3. Only keep the first chart events (by `storetime`) during ICU stay and pivot chart events to become variables/columns. Write all steps in _one_ chain of pipes. Similary to HW3, if a vital has multiple measurements at the first `storetime`, average them.
 ```{r}
+
 vital_items <- c(220045, 220179, 220180, 223761, 220210)
 
-chartevents_tble <- tbl(con_bq, "chartevents") |>
-  select(subject_id, stay_id, itemid, charttime, storetime, valuenum) |>
+vitals_first_wide <- tbl(con_bq, "chartevents") |>
+  transmute(
+    subject_id = as.integer(subject_id),
+    stay_id    = as.integer(stay_id),
+    itemid     = as.integer(itemid),
+    charttime,
+    storetime,
+    valuenum
+  ) |>
   filter(itemid %in% vital_items) |>
-  left_join(icustays_tble, by = "stay_id", ) |>
-  
+  inner_join(
+    icustays_tble |>
+      transmute(
+        subject_id = as.integer(subject_id),
+        stay_id    = as.integer(stay_id),
+        intime,
+        outtime
+      ),
+    by = c("subject_id", "stay_id")
+  ) |>
+  filter(
+    !is.na(storetime),
+    storetime >= intime,
+    storetime <= outtime
+  ) |>
+  mutate(
+    vital = case_when(
+      itemid == 220045 ~ "heart_rate",
+      itemid == 220179 ~ "sbp",
+      itemid == 220180 ~ "dbp",
+      itemid == 223761 ~ "temperature_c",
+      itemid == 220210 ~ "resp_rate"
+    )
+  ) |>
+  group_by(subject_id, stay_id, vital, storetime) |>
+  summarise(
+    value = mean(valuenum, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  group_by(subject_id, stay_id, vital) |>
+  slice_min(order_by = storetime, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  select(subject_id, stay_id, vital, value) |>
+  collect() |>
+  pivot_wider(
+    names_from  = vital,
+    values_from = value
+  )
   
 ```
 
