@@ -90,24 +90,20 @@ admissions_tble <- tbl(con_bq, "admissions") |>
     race,
     hospital_expire_flag
     ) |>
-  arrange(subject_id, hadm_id) |>
-  # show_query() |>
-  print(width = Inf)
+  arrange(subject_id, hadm_id)
 ```
 
 ### Q1.4 `patients` data
 Connect to the `patients` table.
 ```{r}
 patients_tble <-tbl(con_bq, "patients") |>
-  arrange(subject_id) |>
-  # show_query() |>
-  print(width = Inf)
+  arrange(subject_id) 
 ```
 
 ### Q1.5 `labevents` data
 
 ```{bash}
-zcat < ~/mimic/hosp/labevents.csv.gz | head -10
+zcat < ~/mimic/hosp/d_labitems.csv.gz | grep '^50862,'
 ```
 
 Connect to the `labevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the lab items listed in HW3. Only keep the last lab measurements (by `storetime`) before the ICU stay and pivot lab items to become variables/columns. Write all steps in _one_ chain of pipes.
@@ -124,7 +120,7 @@ labevents_tble <- tbl(con_bq, "labevents") |>
     hadm_id    = as.integer(hadm_id),
     itemid     = as.integer(itemid),
     storetime,
-    valuenum
+    valuenum   = as.numeric(valuenum)
   ) |>
   filter(itemid %in% lab_items) |>
   inner_join(
@@ -156,14 +152,24 @@ labevents_tble <- tbl(con_bq, "labevents") |>
     .groups = "drop"
   ) |>
   group_by(subject_id, hadm_id, stay_id, label) |>
-  slice_max(order_by = storetime, n = 1, with_ties = FALSE) |>
-  ungroup() |>
-  select(subject_id, hadm_id, stay_id, label, value) |>
-  collect() |>
-  mutate(label = str_replace_all(label, "[^A-Za-z0-9]+", "_")) |>
-  pivot_wider(
-    names_from = label,
-    values_from = value
+  mutate(last_storetime = max(storetime, na.rm = TRUE)) |>
+  filter(storetime == last_storetime) |>
+  summarise(
+    value = mean(value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  group_by(subject_id, hadm_id, stay_id) |>
+  summarise(
+    Bicarbonate   = max(if_else(label == "Bicarbonate",   value, NA_real_), na.rm = TRUE),
+    Creatinine    = max(if_else(label == "Creatinine",    value, NA_real_), na.rm = TRUE),
+    Potassium     = max(if_else(label == "Potassium",     value, NA_real_), na.rm = TRUE),
+    Sodium        = max(if_else(label == "Sodium",        value, NA_real_), na.rm = TRUE),
+    Chloride      = max(if_else(label == "Chloride",      value, NA_real_), na.rm = TRUE),
+    Hematocrit    = max(if_else(label == "Hematocrit",    value, NA_real_), na.rm = TRUE),
+    wbc_count     = max(if_else(label == "White Blood Cells",value, NA_real_), na.rm = TRUE),
+    Glucose       = max(if_else(label == "Glucose",       value, NA_real_), na.rm = TRUE),
+    albumin       = max(if_else(label == "Albumin",       value, NA_real_), na.rm = TRUE),
+    .groups = "drop"
   ) |>
   print(width = Inf)
 ```
@@ -172,7 +178,6 @@ labevents_tble <- tbl(con_bq, "labevents") |>
 
 Connect to `chartevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the chart events listed in HW3. Only keep the first chart events (by `storetime`) during ICU stay and pivot chart events to become variables/columns. Write all steps in _one_ chain of pipes. Similary to HW3, if a vital has multiple measurements at the first `storetime`, average them.
 ```{r}
-
 vital_items <- c(220045, 220179, 220180, 223761, 220210)
 
 chartevents_tble <- tbl(con_bq, "chartevents") |>
@@ -182,7 +187,7 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
     itemid     = as.integer(itemid),
     charttime,
     storetime,
-    valuenum
+    valuenum   = as.numeric(valuenum)
   ) |>
   filter(itemid %in% vital_items) |>
   inner_join(
@@ -197,16 +202,17 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
   ) |>
   filter(
     !is.na(storetime),
+    !is.na(valuenum),
     storetime >= intime,
     storetime <= outtime
   ) |>
   mutate(
     vital = case_when(
-      itemid == 220045 ~ "heart_rate",
-      itemid == 220179 ~ "sbp",
-      itemid == 220180 ~ "dbp",
-      itemid == 223761 ~ "temperature_c",
-      itemid == 220210 ~ "resp_rate"
+      itemid == 220045L ~ "heart_rate",
+      itemid == 220179L ~ "sbp",
+      itemid == 220180L ~ "dbp",
+      itemid == 223761L ~ "temperature_c",
+      itemid == 220210L ~ "resp_rate"
     )
   ) |>
   group_by(subject_id, stay_id, vital, storetime) |>
@@ -215,13 +221,20 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
     .groups = "drop"
   ) |>
   group_by(subject_id, stay_id, vital) |>
-  slice_min(order_by = storetime, n = 1, with_ties = FALSE) |>
-  ungroup() |>
-  select(subject_id, stay_id, vital, value) |>
-  collect() |>
-  pivot_wider(
-    names_from  = vital,
-    values_from = value
+  mutate(first_storetime = min(storetime, na.rm = TRUE)) |>
+  filter(storetime == first_storetime) |>
+  summarise(
+    value = mean(value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  group_by(subject_id, stay_id) |>
+  summarise(
+    heart_rate    = max(if_else(vital == "heart_rate",    value, NA_real_), na.rm = TRUE),
+    sbp           = max(if_else(vital == "sbp",           value, NA_real_), na.rm = TRUE),
+    dbp           = max(if_else(vital == "dbp",           value, NA_real_), na.rm = TRUE),
+    temperature_c = max(if_else(vital == "temperature_c", value, NA_real_), na.rm = TRUE),
+    resp_rate     = max(if_else(vital == "resp_rate",     value, NA_real_), na.rm = TRUE),
+    .groups = "drop"
   ) |>
   print(width = Inf)
   
@@ -233,7 +246,7 @@ This step is similar to Q7 of HW3. Using _one_ chain of pipes `|>` to perform fo
 
 
 ```{r}
-icu_adult <- icustays_tble |>
+mimic_icu_cohort <- icustays_tble |>
   left_join(admissions_tble, by = c("subject_id", "hadm_id")) |>
   left_join(patients_tble, by = "subject_id") |>
   mutate(
@@ -241,13 +254,6 @@ icu_adult <- icustays_tble |>
   ) |>
   filter(age_intime >= 18) |>
   select(-anchor_age, -anchor_year, -anchor_year_group) |>
-  collect() |>
-  print(width = Inf)
-```
-
-
-```{r}
-mimic_icu_cohort <- icu_adult |>
   left_join(
     labevents_tble, by = c("stay_id", "subject_id", "hadm_id")
   ) |>
@@ -260,6 +266,7 @@ mimic_icu_cohort <- icu_adult |>
   arrange(subject_id, hadm_id, stay_id) |>
   print(width = Inf)
 ```
+
 
 ### Q1.8 Preprocessing
 
@@ -374,4 +381,29 @@ Develop a Shiny app for exploring the ICU cohort data created in Q1. The app sho
 
 Which AI assistants (e.g., GitHub Copilot) do you use when working on this assignment? Which AI model (e.g., GPT-5 mini, GPT-5, Claude Sonnet 4.5) does the AI assistant use? How do you use them? Do you think they help improve your productivity? 
 
+**solutions:**
+
+GitHub Copilot uses OpenAI's Codex model. ChatGPT uses the GPT-5.2 architecture. I use GitHub Copilot mainly for code suggestions and auto-completion, while I use ChatGPT for more complex questions or when I need help understanding a concept. Overall, I find that these AI assistants do help improve my productivity by providing quick suggestions and explanations, although they are not always perfect.
+
 Give 5 instances where AI model gave incorrect or misleading answers. You can use screenshots or copy-paste the Q&A.
+
+**solutions:**
+
+1. In Q1.2,  Error in `combine_vars()`:
+! At least one layer must contain all faceting variables: `stay_id`
+✖ Plot is missing `stay_id`
+
+2. In Q1.2, Error in `arrange()`:
+! `arrange()` doesn't know how to deal with data of class tbl_df/tbl/data.frame
+Run `rlang::last_error()` to see where the error occurred.
+
+3. In Q1.2, Error in `mutate()`:
+! Problem while computing `y_label = factor("Lab", levels = y_levels)`.
+Caused by error in `factor()`:
+! `levels` should be a character vector of the same length as `x`
+
+4. In Q5, Error in `pivot_wider()`:
+! Values in `valuenum` are not uniquely identified; output will contain list-cols. Consider summarising the values with an appropriate function, e.g. `pivot_wider(values_fn = list)`.
+
+5. In Q6, Error in Error: object '.' not found
+! Problem while computing `storetime = arrow::cast(storetime, arrow::timestamp(unit = "us", timezone = "UTC"))`.
