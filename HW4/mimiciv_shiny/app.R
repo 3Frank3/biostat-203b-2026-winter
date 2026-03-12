@@ -52,7 +52,7 @@ ui <- navbarPage(
         uiOutput("var_select"),
         checkboxInput("group_los", "Stratify by los_long", value = FALSE),
         radioButtons("plot_type", "Plot type:",
-                     choices = c("Histogram", "Boxplot", "Barplot"))
+                     choices = c("Histogram", "Boxplot"))
       ),
       mainPanel(
         tableOutput("summary_table"),

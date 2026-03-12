@@ -1,7 +1,7 @@
 ---
 title: "Biostat 203B Homework 4"
 subtitle: "Due Mar 11 @ 11:59PM"
-author: "Your Name and UID"
+author: "Chih Wei Hsu, UID:706788612"
 format:
   html:
     theme: cosmo
@@ -160,15 +160,24 @@ labevents_tble <- tbl(con_bq, "labevents") |>
   ) |>
   group_by(subject_id, hadm_id, stay_id) |>
   summarise(
-    Bicarbonate   = max(if_else(label == "Bicarbonate",   value, NA_real_), na.rm = TRUE),
-    Creatinine    = max(if_else(label == "Creatinine",    value, NA_real_), na.rm = TRUE),
-    Potassium     = max(if_else(label == "Potassium",     value, NA_real_), na.rm = TRUE),
-    Sodium        = max(if_else(label == "Sodium",        value, NA_real_), na.rm = TRUE),
-    Chloride      = max(if_else(label == "Chloride",      value, NA_real_), na.rm = TRUE),
-    Hematocrit    = max(if_else(label == "Hematocrit",    value, NA_real_), na.rm = TRUE),
-    wbc_count     = max(if_else(label == "White Blood Cells",value, NA_real_), na.rm = TRUE),
-    Glucose       = max(if_else(label == "Glucose",       value, NA_real_), na.rm = TRUE),
-    albumin       = max(if_else(label == "Albumin",       value, NA_real_), na.rm = TRUE),
+    Bicarbonate   = max(if_else(label == "Bicarbonate",
+      value, NA_real_), na.rm = TRUE),
+    Creatinine    = max(if_else(label == "Creatinine",
+      value, NA_real_), na.rm = TRUE),
+    Potassium     = max(if_else(label == "Potassium",
+      value, NA_real_), na.rm = TRUE),
+    Sodium        = max(if_else(label == "Sodium",
+      value, NA_real_), na.rm = TRUE),
+    Chloride      = max(if_else(label == "Chloride",
+      value, NA_real_), na.rm = TRUE),
+    Hematocrit    = max(if_else(label == "Hematocrit",
+      value, NA_real_), na.rm = TRUE),
+    wbc_count     = max(if_else(label == "White Blood Cells",
+      value, NA_real_), na.rm = TRUE),
+    Glucose       = max(if_else(label == "Glucose",
+      value, NA_real_), na.rm = TRUE),
+    albumin       = max(if_else(label == "Albumin",
+      value, NA_real_), na.rm = TRUE),
     .groups = "drop"
   ) |>
   print(width = Inf)
@@ -229,11 +238,16 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
   ) |>
   group_by(subject_id, stay_id) |>
   summarise(
-    heart_rate    = max(if_else(vital == "heart_rate",    value, NA_real_), na.rm = TRUE),
-    sbp           = max(if_else(vital == "sbp",           value, NA_real_), na.rm = TRUE),
-    dbp           = max(if_else(vital == "dbp",           value, NA_real_), na.rm = TRUE),
-    temperature_c = max(if_else(vital == "temperature_c", value, NA_real_), na.rm = TRUE),
-    resp_rate     = max(if_else(vital == "resp_rate",     value, NA_real_), na.rm = TRUE),
+    heart_rate    = max(if_else(vital == "heart_rate",
+      value, NA_real_), na.rm = TRUE),
+    sbp           = max(if_else(vital == "sbp",
+      value, NA_real_), na.rm = TRUE),
+    dbp           = max(if_else(vital == "dbp",
+      value, NA_real_), na.rm = TRUE),
+    temperature_c = max(if_else(vital == "temperature_c",
+      value, NA_real_), na.rm = TRUE),
+    resp_rate     = max(if_else(vital == "resp_rate",
+      value, NA_real_), na.rm = TRUE),
     .groups = "drop"
   ) |>
   print(width = Inf)
@@ -283,11 +297,16 @@ library(gtsummary)
 
 mimic_icu_cohort_prep <- mimic_icu_cohort |>
   mutate(
-    first_careunit      = fct_lump_n(factor(first_careunit), n = 4, other_level = "Other"),
-    last_careunit       = fct_lump_n(factor(last_careunit), n = 4, other_level = "Other"),
-    admission_type      = fct_lump_n(factor(admission_type), n = 4, other_level = "Other"),
-    admission_location  = fct_lump_n(factor(admission_location), n = 3, other_level = "Other"),
-    discharge_location  = fct_lump_n(factor(discharge_location), n = 4, other_level = "Other"),
+    first_careunit      = fct_lump_n(factor(first_careunit),
+      n = 4, other_level = "Other"),
+    last_careunit       = fct_lump_n(factor(last_careunit),
+      n = 4, other_level = "Other"),
+    admission_type      = fct_lump_n(factor(admission_type),
+      n = 4, other_level = "Other"),
+    admission_location  = fct_lump_n(factor(admission_location),
+      n = 3, other_level = "Other"),
+    discharge_location  = fct_lump_n(factor(discharge_location),
+      n = 4, other_level = "Other"),
     race = fct_collapse(
       factor(race),
       ASIAN = c(
@@ -389,21 +408,12 @@ Give 5 instances where AI model gave incorrect or misleading answers. You can us
 
 **solutions:**
 
-1. In Q1.2,  Error in `combine_vars()`:
-! At least one layer must contain all faceting variables: `stay_id`
-✖ Plot is missing `stay_id`
+1. In Q1.7, AI said left_join() NAs meant the join was wrong.
 
-2. In Q1.2, Error in `arrange()`:
-! `arrange()` doesn't know how to deal with data of class tbl_df/tbl/data.frame
-Run `rlang::last_error()` to see where the error occurred.
+2. In Q1.5, AI said lab missingness was mainly from not converting IDs to integer.
 
-3. In Q1.2, Error in `mutate()`:
-! Problem while computing `y_label = factor("Lab", levels = y_levels)`.
-Caused by error in `factor()`:
-! `levels` should be a character vector of the same length as `x`
+3. In Q1.5 and Q1.6, AI said pivot_wider() could stay in BigQuery unchanged, although I didn't use pivot_wider() eventually.
 
-4. In Q5, Error in `pivot_wider()`:
-! Values in `valuenum` are not uniquely identified; output will contain list-cols. Consider summarising the values with an appropriate function, e.g. `pivot_wider(values_fn = list)`.
+4. In Q2, AI assumed the Shiny timeline error was just a ggplot issue.
 
-5. In Q6, Error in Error: object '.' not found
-! Problem while computing `storetime = arrow::cast(storetime, arrow::timestamp(unit = "us", timezone = "UTC"))`.
+5. In Q1.8, AI missed that tbl_summary() failed because dod was a Date.
