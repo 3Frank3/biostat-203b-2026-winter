@@ -32,6 +32,8 @@ library(DBI)
 library(gt)
 library(gtsummary)
 library(tidyverse)
+library(htmltools)
+library(forcats)
 ```
 
 ## Q1. Compile the ICU cohort in HW3 from the Google BigQuery database 
@@ -286,14 +288,8 @@ mimic_icu_cohort <- icustays_tble |>
 
 Perform the following preprocessing steps. (i) Lump infrequent levels into "Other" level for `first_careunit`, `last_careunit`, `admission_type`, `admission_location`, and `discharge_location`. (ii) Collapse the levels of `race` into `ASIAN`, `BLACK`, `HISPANIC`, `WHITE`, and `Other`. (iii) Create a new variable `los_long` that is `TRUE` when `los` is greater than or equal to 2 days. (iv) Summarize the data using `tbl_summary()`, stratified by `los_long`. Hint: `fct_lump_n` and `fct_collapse` from the `forcats` package are useful.
 
-Hint: Below is a numerical summary of my tibble after preprocessing:
-
-<iframe width=95% height="500" src="./mimic_icu_cohort_gtsummary.html"></iframe>
 
 ```{r}
-library(dplyr)
-library(forcats)
-library(gtsummary)
 
 mimic_icu_cohort_prep <- mimic_icu_cohort |>
   mutate(
@@ -364,9 +360,10 @@ mimic_icu_cohort_summary <- mimic_icu_cohort_prep |>
   tbl_summary(
     by = los_long,
     missing = "ifany"
-  )
+  ) 
 
 mimic_icu_cohort_summary
+
 ```
 
 ### Q1.9 Save the final tibble
