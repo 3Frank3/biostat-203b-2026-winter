@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>HW4</title>
+  <style type="text/css">
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<div id="header">
+<h1 class="title">HW4</h1>
+</div>
+<p><em>Chih Wei Hsu</em></p>
+<h3 id="overall-grade-263270">Overall Grade: 263/270</h3>
+<h3 id="late-penalty">Late penalty</h3>
+<ul>
+<li>Is the homework submitted (git tag time) before deadline? Take 10
+pts off per day for late submission.</li>
+</ul>
+<h3 id="quality-of-report-1010">Quality of report: 10/10</h3>
+<ul>
+<li><p>Is the final report in a human readable format html?</p></li>
+<li><p>Is the report prepared as a dynamic document (Quarto) for better
+reproducibility?</p></li>
+<li><p>Is the report clear (whole sentences, typos, grammar)? Do readers
+have a clear idea what’s going on and how results are produced by just
+reading the report? Take some points off if the solutions are too
+succinct to grasp, or there are too many typos/grammar.</p></li>
+</ul>
+<h3
+id="completeness-correctness-and-efficiency-of-solution-215220">Completeness,
+correctness and efficiency of solution: 215/220</h3>
+<ul>
+<li>Q1 (95/100)</li>
+</ul>
+<p>If <code>collect</code> before end of Q1.7, take 20 points off.</p>
+<p>If ever put the BigQuery token in Git, take 50 points off.</p>
+<p>Cohort in Q1.7 should match that in HW3.</p>
+<p>Q1.8 summaries should roughly match those given.</p>
+<ul>
+<li><p>Q1.5 &amp; Q1.6 (-5 total): Missing
+<code>arrange(subject_id, stay_id)</code> at the end of both the
+labevents and chartevents pipe chains. Output order will not match the
+ground truth. Single 5-point deduction applied.</p></li>
+<li><p>Q1.7: <code>collect()</code> is correctly placed near the end
+(line 281). <code>arrange(subject_id, hadm_id, stay_id)</code> is
+present after <code>collect()</code>. No early collect penalty.</p></li>
+<li><p>Q1.8: <code>fct_lump_n</code> correctly applied to all five
+variables. <code>fct_collapse</code> used for race to
+ASIAN/BLACK/HISPANIC/WHITE/Other. <code>los_long = los &gt;= 2</code>
+correct.</p></li>
+<li><p>Q2 (100/100)</p>
+<ul>
+<li><strong>Folder structure</strong>: Separate <code>app_block.R</code>
+file provided in <code>mimiciv_shiny/</code>. No penalty.</li>
+<li><strong>Tab 1 (Cohort Explorer)</strong>: Includes all three
+variable categories (Demographics, Labs, Vitals) with a grouped dropdown
+via <code>switch()</code> — <em>bonus: +5 for grouped variable
+categories with dropdown</em>. Histogram/boxplot plots and summary table
+displayed.</li>
+<li><strong>Tab 2 (Patient Explorer)</strong>: Contains both an ADT
+timeline plot and an ICU vitals faceted plot, both fetching data from
+BigQuery via <code>tbl(con_bq, ...)</code>. Patient ID is entered via
+<code>numericInput</code> — <em>bonus: +5 for numeric input instead of
+dropdown</em>.</li>
+<li>(-3): After <code>collect()</code> from BigQuery, datetime column
+(<code>charttime</code>) are not converted to POSIXct.</li>
+<li>(-5): Diagnoses retrieved via <code>slice_head(n = 3)</code> without
+<code>arrange(seq_num)</code>. Not sorted by clinical priority.</li>
+<li>(-2): <code>lab_vars</code> includes “Hemoglobin” and
+“Platelet_Count” which likely do not exist in the cohort RDS, causing
+empty output if selected.</li>
+<li><strong>Error handling</strong>: Uses <code>req()</code> and
+<code>eventReactive</code>. No <code>tryCatch</code> or
+<code>validate</code> wrappers. No <code>onStop()</code> for BigQuery
+connection teardown.</li>
+</ul></li>
+<li><p>Q3 (20/20)</p>
+<ul>
+<li>Lists AI tools (GitHub Copilot, ChatGPT) and discusses their
+use.</li>
+<li>Provides 5 instances of AI errors/inaccuracies (left_join NAs, ID
+type conversion, pivot_wider in BigQuery, Shiny timeline, tbl_summary
+dod issue). Full credit.</li>
+</ul></li>
+</ul>
+<h3 id="usage-of-git-1010">Usage of Git: 10/10</h3>
+<ul>
+<li><p>Are branches (<code>main</code> and <code>develop</code>)
+correctly set up? Is the hw submission put into the <code>main</code>
+branch?</p></li>
+<li><p>Are there enough commits (&gt;=5) in develop branch? Are commit
+messages clear? The commits should span out not clustered the day before
+deadline.</p></li>
+<li><p>Is the hw submission tagged?</p></li>
+<li><p>Are the folders (<code>hw1</code>, <code>hw2</code>, …) created
+correctly?</p></li>
+<li><p>Do not put a lot auxiliary files into version control.</p></li>
+<li><p>If those gz data files are in Git, take 5 points off.</p></li>
+</ul>
+<h3 id="reproducibility-1010">Reproducibility: 10/10</h3>
+<ul>
+<li><p>Are the materials (files and instructions) submitted to the
+<code>main</code> branch sufficient for reproducing all the results?
+Just click the <code>Render</code> button will produce the final
+<code>html</code>?</p></li>
+<li><p>If necessary, are there clear instructions, either in report or
+in a separate file, how to reproduce the results?</p></li>
+</ul>
+<h3 id="r-code-style-1820">R code style: 18/20</h3>
+<p>For bash commands, only enforce the 80-character rule. Take 2 pts off
+for each violation.</p>
+<ul>
+<li><a
+href="https://style.tidyverse.org/syntax.html#long-function-calls">Rule
+2.6</a> The maximum line length is 80 characters. Long URLs and strings
+are exceptions.
+<ul>
+<li>No violations found.</li>
+</ul></li>
+<li><a href="https://style.tidyverse.org/syntax.html#indenting">Rule
+2.5.1</a> When indenting your code, use two spaces.
+<ul>
+<li>No violations found.</li>
+</ul></li>
+<li><a
+href="https://style.tidyverse.org/syntax.html#infix-operators">Rule
+2.2.4</a> Place spaces around all infix operators (=, +, -, &lt;-,
+etc.).
+<ul>
+<li>(-2) Line 101: <code>patients_tble &lt;-tbl(con_bq, ...)</code> —
+missing space before <code>tbl</code> after <code>&lt;-</code>.</li>
+</ul></li>
+<li><a href="https://style.tidyverse.org/syntax.html#commas">Rule
+2.2.1.</a> Do not place a space before a comma, but always place one
+after a comma.
+<ul>
+<li>No violations found.</li>
+</ul></li>
+<li><a href="https://style.tidyverse.org/syntax.html#parentheses">Rule
+2.2.2</a> Do not place spaces around code in parentheses or square
+brackets. Place a space before left parenthesis, except in a function
+call.
+<ul>
+<li>No violations found.</li>
+</ul></li>
+</ul>
+</body>
+</html>
