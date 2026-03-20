@@ -18,51 +18,7 @@ Display machine information:
 sessionInfo()
 ```
 
-Display my machine memory.
-```{r}
-memuse::Sys.meminfo()
-```
 
-Load database libraries and the tidyverse frontend:
-```{r}
-library(bigrquery)
-library(dbplyr)
-library(DBI)
-library(gt)
-library(gtsummary)
-library(tidyverse)
-library(arrow)
-library(data.table)
-library(duckdb)
-library(memuse)
-library(pryr)
-library(R.utils)
-library(dplyr)
-```
-
-```{r}
-# path to the service account token 
-satoken <- "biostat-203b-2026-winter-92fefbfab477.json"
-# BigQuery authentication using service account
-bq_auth(path = satoken)
-```
-
-Connect to BigQuery database `mimiciv_3_1` in GCP (Google Cloud Platform), using the project billing account `biostat-203b-2025-winter`.
-```{r}
-# connect to the BigQuery database `biostat-203b-2025-mimiciv_3_1`
-con_bq <- dbConnect(
-    bigrquery::bigquery(),
-    project = "biostat-203b-2025-winter",
-    dataset = "mimiciv_3_1",
-    billing = "biostat-203b-2025-winter"
-)
-con_bq
-```
-
-List all tables in the `mimiciv_3_1` database.
-```{r}
-dbListTables(con_bq)
-```
 ## 1. Title Page
 
 ### Project title 
@@ -76,575 +32,259 @@ Max Vo, Frank Hsu, Jolly Lin
 
 
 ## 2. Abstract
-Provide a succinct summary of your entire project (~250–300 words), including:
 
 ### Background
 Prolonged mechanical ventilation is clinically meaningful because it is strongly associated with increased ICU morbidity, including ventilator-associated complications/events, longer ICU length of stay, and higher mortality risk. Identifying patients at risk for prolonged ventilation can inform early clinical decision-making, resource allocation, and discussions with patients’ families regarding prognosis.
     
 ### Objectives
-Among ICU patients who receive invasive mechanical ventilation, classify the duration of ventilation (short vs moderate vs prolonged) using clinical and demographic features available at or immediately before the start of ventilation.
+Using the MIMIC-IV database, we developed and compared machine learning models to predict whether an ICU patient would have prolonged ventilation duration.
     
 ### Methods - Main approach and data sources
+We queried MIMIC-IV v3.1 via Google BigQuery and constructed a stay-level cohort of ICU stays with invasive ventilation events identified in procedureevents (itemid 225792). Because ventilation procedures were recorded as multiple time intervals per ICU stay that could overlap, we computed ventilation duration using a union-of-intervals approach to avoid double-counting. The index time was the start of ventilation (vent_start). Candidate predictors included demographics, admission/service variables, outpatient measurements (OMR) and ICU labs/vitals. For time alignment, we extracted the closest measurements prior to vent_start (e.g., last labs in a lookback window and nearest vital signs). We trained three algorithms using the tidymodels framework with 5-fold cross-validation and a held-out test set: elastic-net logistic regression (glmnet), random forest (ranger), and XGBoost. Missingness was handled using missingness indicators and median imputation within a reproducible recipe.
 
 ### Results - Key findings
+In the held-out test set, random forest achieved ROC AUC ≈ 0.807, accuracy ≈ 0.744, and Brier score ≈ 0.168. Elastic-net logistic regression achieved ROC AUC ≈ 0.800, accuracy ≈ 0.737, and Brier score ≈ 0.167. The test prevalence of prolonged ventilation was ≈ 27%. XGBoost achieved ROC AUC ≈ 0.823, accuracy ≈ 0.744
     
 ### Conclusion - Implications and potential impact
-
+Both tree-based and regularized linear models provided good discrimination and comparable calibration for predicting prolonged ventilation at the time of ventilation initiation. This approach demonstrates how scalable EHR pipelines (BigQuery + dbplyr) can support reproducible ICU risk prediction, with potential utility for early clinical triage and care planning.
 
 ## 3. Introduction
-Establish your project’s rationale and research gap.
 
 ### Background
-Prolonged mechanical ventilation is clinically meaningful because it is strongly associated with increased ICU morbidity, including ventilator-associated complications/events, longer ICU length of stay, and higher mortality risk. Identifying patients at risk for prolonged ventilation can inform early clinical decision-making, resource allocation, and discussions with patients’ families regarding prognosis.
+Mechanical ventilation is a core ICU therapy but carries risks including ventilator-associated complications and long-term functional decline. Prolonged ventilation is clinically important because it often correlates with severity of illness, resource burden, and downstream outcomes such as longer ICU length of stay and higher care complexity. Predicting which patients will require prolonged ventilation at the time ventilation begins can inform early planning (e.g., staffing, respiratory support strategy, and anticipatory discussions).
         
 ### Literature Review
 
 ### Problem Statement
-
+In real-world ICU documentation, ventilation procedures may appear as multiple records per stay with overlaps and gaps. Naïvely summing durations can overestimate ventilation time and mislabel the outcome. Additionally, temporal alignment is critical: predictors must reflect information available before the prediction time to avoid leakage.
     
 ### Objectives
-Among ICU patients who receive invasive mechanical ventilation, classify the duration of ventilation (short vs moderate vs prolonged) using clinical and demographic features available at or immediately before the start of ventilation.
+- Construct a reproducible ICU cohort of ventilated patients from MIMIC-IV using BigQuery/dbplyr.
+
+- Define prolonged ventilation using a robust union-of-intervals duration computation.
+
+- Train and compare 3 ML algorithms to predict prolonged ventilation at ventilation initiation using pre-vent predictors.
+
+- Evaluate discrimination and calibration using cross-validation and a held-out test set.
         
 ### Project Aims/Hypotheses
-* Clearly define your research objectives  
-* What you expect to find or demonstrate
+
+    * Aim
+    
+Predict prolonged ventilation (binary outcome) using structured EHR features available prior to ventilation start.
+
+    * Hypothesis
+
+Tree-based models (random forest/XGBoost) will capture nonlinear relationships and interactions and achieve slightly higher discrimination than a regularized linear baseline, while elastic-net logistic regression will provide competitive and more interpretable performance.
         
 ## 4. Methods
 
 ### 4.1 Data Source or Materials
 
-* Dataset(s) used: 
+    * Dataset(s) used: 
 
 We used the MIMIC-IV database to construct an end-to-end, reproducible machine learning pipeline in R. I accessed the data using Google BigQuery via dbplyr, enabling scalable querying and feature extraction.
-    
-    
-* Cohort definition: 
 
-Our study cohort consists of ICU stays with documented invasive mechanical ventilation events identified from the ICU procedureevents table using the invasive ventilation ItemID (225792). Each ICU stay is treated as a unit of analysis (stay_id). We link ventilation events to ICU stays (icustays) and hospital admissions (admissions) using MIMIC-IV identifiers (subject_id, hadm_id, stay_id). We restrict the cohort to adult patients based on the MIMIC-IV age representation (anchor age). We exclude records with missing or invalid ventilation timestamps required to compute ventilation duration.
-
-* Index time:
+    * Index time:
 The index time is defined as the ventilation initiation time (starttime) for the invasive ventilation event. All predictive features are derived from information available prior to (or at) the index time to avoid information leakage.
 
-* Inclusion Criteria
 
-eldely patients (age ≥ 65)
+    * Inclusion/Exclusion Criteria
 
-mechanical ventilation during ICU stay
+- Included ICU stays with invasive ventilation procedure events in procedureevents (itemid 225792).
 
-* Exclusion Criteria
+- Restricted to elderly patients: anchor_age > 65.
 
-ICU stay < 24 hours
+- Excluded ventilation intervals with missing start/end times or negative durations.
 
-missing key demographic variables
+
+    * Strategies for handling big data
     
-* Strategies for handling big data: 
-BigQuery/dbplyr 
+All cohort creation and feature extraction were performed using dbplyr lazy queries executed in BigQuery to avoid local memory limits. Only finalized modeling tables were collected into R for model training.
     
-* privacy and appropriate use and MIMIC credentialing context
-
-
-
-
+    * privacy and appropriate use and MIMIC credentialing context
+    
+MIMIC-IV is a deidentified clinical dataset requiring credentialing and adherence to PhysioNet data use agreements. We used the dataset for educational research and avoided any attempts at reidentification.
 
  
 ### 4.2 Variables / Features
     
-    * What variables are included and why
-        
+    * Outcome
+
+- Index time: vent_start, the earliest ventilation start time within an ICU stay after merging overlapping intervals.
+
+- Outcome: y_prolong = 1 if total invasive ventilation duration (union-of-intervals) exceeds 48 hours; else 0.
+
+    * Key predictors
+
+- Demographics: age (anchor_age), sex (gender), and admission variables (e.g., race, admission type/location) 
+
+- ICU vitals: heart rate, systolic/diastolic BP, temperature, respiratory rate — extracted as the closest measurement prior to vent_start.
+
+- Labs: BUN/urea nitrogen, creatinine, sodium, potassium, and blood gas-related labs when available — extracted as the closest lab prior to vent_start within a lookback window 
+
+- OMR: BMI and blood pressure — extracted as the nearest measurements prior to vent_start, without requiring BMI and BP to occur on the same day.
+
     * How they were processed or transformed
+
+- We aligned all time-varying predictors relative to vent_start to avoid post-index leakage.
+
+- We handled missingness using (i) missingness indicator variables and (ii) median imputation for numeric features inside a tidymodels recipe.
         
-    4.3 Analytical Approach / Modeling
+### 4.3 Analytical Approach / Modeling
+
+    * Index time, prediction window 
+
+- Prediction time = ventilation initiation (vent_start).
+
+- Predictors were taken from measurements at or before vent_start (and within a defined lookback window for labs).
+
+    * Ventilation duration definition (union-of-intervals)
     
-    * Index time, prediction window, and outcome definition
+Because a stay can contain multiple overlapping ventilation records, we:
+
+- Sorted intervals by start time,
+
+- Computed a running maximum end time,
+
+- Began a new “segment” only when an interval started after the previous merged end,
+
+- Summed merged segment durations to obtain total ventilation hours for the stay.
+
+This avoids double-counting overlapping documentation artifacts and yields a stable duration estimate.
     
-    * Machine learning algorithms (require at least 3)
-        
-    * Software used (e.g., R packages)
-        
-    4.4 Model Evaluation
+    * Machine learning algorithms 
     
-    * Performance metrics (e.g., ROC/AUC, accuracy)
+- Elastic-net logistic regression (glmnet)
+
+- Random forest (ranger)
+
+- XGBoost (gradient boosted trees)
+
+All models were trained using the tidymodels ecosystem (recipes/workflows/tune).
         
-    * Validation methods (train/test split, cross-validation, etc.)
+    * Software used
+    
+R packages included: tidymodels, recipes, parsnip, workflows, tune, yardstick, dbplyr, bigrquery, ranger, glmnet and xgboost.
+        
+### 4.4 Model Evaluation
+    
+    * Performance metrics
+
+- ROC AUC (discrimination)
+
+- PR AUC (useful for class imbalance)
+
+- Accuracy (threshold-based classification, default 0.5)
+
+- Brier score (probability calibration; lower is better)
+
+
+    * Validation methods
+
+- Train/test split with stratification on y_prolong
+
+- 5-fold cross-validation on the training set for hyperparameter tuning
+
+- Final evaluation on a held-out test set using last_fit() (single unbiased test estimate)
         
 ## 5. Results
 
-State your findings clearly and objectively. Provide tables and figures where appropriate.
-    
 ### 5.1 Cohort / Sample Characteristics
 
+    * Description of your data
 
-```{bash}
-zcat < ~/mimic/icu/procedureevents.csv.gz \
-| awk -F, 'NR==1 || $8==225792' \
-| head -10
+The final modeling cohort contained ~15,149 ICU stays (elderly ventilated patients) with a test-set prolonged ventilation prevalence of ~27%.
+
+```{=html}
+<iframe src="mimic_vent_cohort_summary.html" width="100%" height="600px"></iframe>
 ```
 
-```{r}
-proc_tbl <- tbl(con_bq, "procedureevents") |>
-  arrange(subject_id) |>
-  print(width=inf)
-```
-
-```{r}
-vent_events <- proc_tbl |>
-  filter(itemid == 225792) |>
-  filter(!is.na(starttime), !is.na(endtime)) |>
-  mutate(
-    dur_sec = sql("TIMESTAMP_DIFF(endtime, starttime, SECOND)"),
-    dur_hr  = dur_sec / 3600.0
-  ) |>
-  filter(dur_hr >= 0) |>
-  select(subject_id, hadm_id, stay_id, itemid, starttime, endtime, dur_hr) |>
-  print(width = inf)
-```
-
-```{r}
-vent_events |>
-  summarise(
-    n_patients = n_distinct(subject_id),
-    min_hr = min(dur_hr),
-    p50_hr = sql("APPROX_QUANTILES(dur_hr, 100)[OFFSET(50)]"),
-    p95_hr = sql("APPROX_QUANTILES(dur_hr, 100)[OFFSET(95)]"),
-    max_hr = max(dur_hr)
-  ) |>
-  collect()
-```
-```{r}
-vent_stay <- vent_events |>
-  group_by(stay_id) |>
-  summarise(
-    vent_hr = sum(dur_hr, na.rm = TRUE),
-    n_vent_events = n(),
-    vent_start_min = min(starttime),
-    vent_end_max   = max(endtime),
-    .groups = "drop"
-  )
-
-cut_hr <- 72
-
-vent_stay_labeled <- vent_stay |>
-  mutate(y_prolong = as.integer(vent_hr > cut_hr))
-
-cohort <- icustays_tbl |>
-  inner_join(vent_stay_labeled, by = "stay_id") |>
-  select(
-    subject_id, hadm_id, stay_id,
-    first_careunit, last_careunit,
-    intime, outtime,
-    vent_hr, n_vent_events, vent_start_min, vent_end_max,
-    y_prolong
-  )
-```
-
-```{r}
-vent_stay_labeled |>
-  summarise(
-    n_stays = n(),
-    prop_prolong = mean(y_prolong)
-  ) |>
-  collect()
-```
-
-```{r}
-cohort |>
-  summarise(
-    n = n(),
-    n_subject = n_distinct(subject_id),
-    n_hadm = n_distinct(hadm_id)
-  ) |>
-  collect()
-```
-
-
-
-
-
-```{r}
-patients_tbl <- tbl(con_bq, "patients") |>
-  select(subject_id, gender, anchor_age) |>
-  arrange(subject_id) |>
-  print(width =inf)
-```
-
-```{r}
-admissions_tbl <- tbl(con_bq, "admissions") |>
-  select(
-    subject_id, 
-    hadm_id, 
-    admission_type, 
-    admission_location, 
-    race, 
-    hospital_expire_flag
-    ) |>
-  arrange(subject_id, hadm_id) |>
-  print(width=inf)
-```
-
-```{r}
-icustays_tbl   <- tbl(con_bq, "icustays") |>
-  arrange(subject_id, stay_id) |>
-  print(width=inf)
-```
-
-```{bash}
-zcat < ~/mimic/icu/d_items.csv.gz \
-| awk -F, 'NR==1 || $1==225792 {print $0}'
-```
-
-```{r}
-ditems_tbl <- tbl(con_bq, "d_items") |>
-  filter(itemid == 225792) |>
-  select(itemid, label, category) |>
-  print(width=inf)
-```
-
-```{r}
-omr_tbl <- tbl(con_bq, "omr") |>
-  arrange(subject_id) |>
-  print(width=inf)
-```
-
-setting each subject_id ventilation anchor time
-```{r}
-vent_anchor_subj <- proc_tbl |>
-  filter(itemid == 225792) |>
-  filter(!is.na(starttime)) |>
-  group_by(subject_id) |>
-  summarise(
-    vent_start = min(starttime),
-    .groups = "drop"
-  )
-```
-
-select BMI/BP from omr_tbl
-```{r}
-omr_bp_bmi <- omr_tbl |>
-  filter(result_name %in% c("BMI (kg/m2)", "Blood Pressure"))
-```
-
-```{r}
-omr_days_both <- omr_bp_bmi |>
-  group_by(subject_id, chartdate) |>
-  summarise(
-    has_bmi = max(as.integer(result_name == "BMI (kg/m2)")),
-    has_bp  = max(as.integer(result_name == "Blood Pressure")),
-    .groups = "drop"
-  ) |>
-  filter(has_bmi == 1, has_bp == 1)
-```
-
-
-```{r}
-best_day <- vent_anchor_subj |>
-  inner_join(omr_days_both, by = "subject_id") |>
-  mutate(
-    rn = sql("
-      ROW_NUMBER() OVER (
-        PARTITION BY subject_id
-        ORDER BY
-          ABS(DATETIME_DIFF(DATETIME(chartdate), DATETIME(vent_start), SECOND)) ASC,
-          chartdate DESC
-      )
-    ")
-  ) |>
-  filter(rn == 1) |>
-  select(subject_id, omr_date = chartdate)
-```
-
-```{r}
-omr_bestday_long <- omr_bp_bmi |>
-  inner_join(best_day, by = "subject_id") |>
-  filter(chartdate == omr_date) |>
-  mutate(
-    rn2 = sql("
-      ROW_NUMBER() OVER (
-        PARTITION BY subject_id, result_name
-        ORDER BY seq_num DESC
-      )
-    ")
-  ) |>
-  filter(rn2 == 1) |>
-  select(subject_id, omr_date, result_name, result_value)
-```
-
-```{r}
-omr_features <- omr_bestday_long |>
-  group_by(subject_id, omr_date) |>
-  summarise(
-    bmi = sql("MAX(IF(result_name='BMI (kg/m2)', SAFE_CAST(result_value AS FLOAT64), NULL))"),
-    bp_raw = sql("MAX(IF(result_name='Blood Pressure', result_value, NULL))"),
-    sbp = sql("MAX(IF(result_name='Blood Pressure', SAFE_CAST(SPLIT(result_value,'/')[OFFSET(0)] AS FLOAT64), NULL))"),
-    dbp = sql("MAX(IF(result_name='Blood Pressure', SAFE_CAST(SPLIT(result_value,'/')[OFFSET(1)] AS FLOAT64), NULL))"),
-    .groups = "drop"
-  ) |>
-  print(width=inf)
-```
-
-
-```{bash}
-zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i Nitrogen
-```
-
-```{r}
-# 1) target itemids
-lab_items <- c(
-   51006, 50912, 50971, 50983
-  )
-
-lab_name <- c(
-  UreaNitrogen = "51006",
-  creatinine  = "50912",
-  potassium   = "50971",
-  sodium      = "50983"
-)
-```
-
-```{r}
-
-# 2) ICU reference table
-icu_rtbl <- icustays_tbl |>
-  transmute(
-    subject_id = as.integer(subject_id),
-    hadm_id    = as.integer(hadm_id),
-    stay_id    = as.integer(stay_id),
-    intime
-  )
-
-# 3) base lab table
-labs_base <- tbl(con_bq, "labevents") |>
-  transmute(
-    subject_id = as.integer(subject_id),
-    hadm_id    = as.integer(hadm_id),
-    itemid     = as.integer(itemid),
-    storetime,
-    valuenum
-  ) |>
-  filter(itemid %in% !!lab_items) |>
-  inner_join(icu_rtbl, by = c("subject_id", "hadm_id")) |>
-  filter(storetime <= intime)
-
-# 4) find the last pre-ICU lab time for each stay_id and itemid
-labs_last_time <- labs_base |>
-  group_by(stay_id, itemid) |>
-  summarise(
-    last_storetime = max(storetime, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# 5) keep rows at that last time, average ties if multiple rows exist
-labs_last <- labs_base |>
-  inner_join(labs_last_time, by = c("stay_id", "itemid")) |>
-  filter(storetime == last_storetime) |>
-  group_by(stay_id, itemid) |>
-  summarise(
-    valuenum = mean(valuenum, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# 6) wide-format output, still as BigQuery remote table
-labevents_tble <- labs_last |>
-  group_by(stay_id) |>
-  summarise(
-    UreaNitrogen = mean(case_when(itemid == 51006 ~ valuenum), na.rm = TRUE),
-    creatinine   = mean(case_when(itemid == 50912 ~ valuenum), na.rm = TRUE),
-    potassium    = mean(case_when(itemid == 50971 ~ valuenum), na.rm = TRUE),
-    sodium       = mean(case_when(itemid == 50983 ~ valuenum), na.rm = TRUE),
-    .groups = "drop"
-  ) |>
-  arrange(stay_id)
-
-labevents_tble
-```
-
-```{r}
-d_items_tbl <- tbl(con_bq, "d_items")
-```
-
-```{r}
-chartitem_itemid <- d_items_tbl |>
-  filter(itemid %in% c(
-    220045,   # heart rate
-    220179,   # systolic_bp
-    220180,   # diastolic_bp
-    223761,   # temperature_c
-    220210    # respiratory_rate
-  )) |>
-  collect()
-
-item_ids <- chartitem_itemid$itemid
-```
-
-```{r}
-  chartevents_raw <- tbl(con_bq, "chartevents") |>
-    select(subject_id, stay_id, itemid, charttime, storetime, valuenum) |>
-    filter(itemid %in% !!item_ids) |>
-    inner_join(
-      icustays_tbl |>
-        select(stay_id, intime, outtime),
-      by = "stay_id"
-    ) |>
-    filter(storetime >= intime, storetime <= outtime)
-
-  # 每個 subject_id, stay_id, itemid 找最早的 storetime
-  earliest_time <- chartevents_raw |>
-    group_by(subject_id, stay_id, itemid) |>
-    summarise(first_storetime = min(storetime, na.rm = TRUE), .groups = "drop")
-
-  # 只保留最早 storetime 那些列；若 ties 存在就都保留
-  chartevents_first <- chartevents_raw |>
-    inner_join(
-      earliest_time,
-      by = c("subject_id", "stay_id", "itemid")
-    ) |>
-    filter(storetime == first_storetime)
-
-  # ties 的 valuenum 取平均，然後直接做寬表
-  chartevents_tbl <- chartevents_first |>
-    group_by(subject_id, stay_id) |>
-    summarise(
-      heart_rate = mean(case_when(itemid == 220045 ~ valuenum), na.rm = TRUE),
-      systolic_bp = mean(case_when(itemid == 220179 ~ valuenum), na.rm = TRUE),
-      diastolic_bp = mean(case_when(itemid == 220180 ~ valuenum), na.rm = TRUE),
-      temperature_c = mean(case_when(itemid == 223761 ~ valuenum), na.rm = TRUE),
-      respiratory_rate = mean(case_when(itemid == 220210 ~ valuenum), na.rm = TRUE),
-      .groups = "drop"
-    ) |>
-    arrange(subject_id, stay_id) |>
-    collect()
-
-print(chartevents_tbl, width = Inf)
-```
-
-```{r}
-services_tbl   <- tbl(con_bq, "services") |>
-  select(subject_id, hadm_id, curr_service) |>
-  print(width=inf)
-```
-
-
-
-putting things together
-
-
-
-```{r}
-mimic_core <- cohort |>
-  left_join(
-    admissions_tbl,
-    by = "hadm_id",
-    suffix = c("", "_adm")
-  ) |>
-  left_join(
-    patients_tbl,
-    by = "subject_id",
-    suffix = c("", "_pt")
-  ) |>
-  left_join(
-    icustays_tbl,
-    by = "stay_id",
-    suffix = c("", "_icust")
-  ) |>
-  left_join(
-    omr_features,
-    by = "subject_id",
-    suffix = c("", "_omr")
-  ) |>
-  left_join(
-    services_tbl,
-    by = "subject_id",
-    suffix = c("", "_serv")
-  )
-```
-
-```{r}
-mimic_icu_cohort <- mimic_core |>
-  left_join(labevents_tble,   by = "stay_id") |>
-  left_join(chartevents_tbl, by = "stay_id")
-
-print(mimic_icu_cohort, width = Inf)
-```
-
-
-
-
-
-
-
-
-
-
-
-    * Description of your data (counts, demographics, etc.)
-        
-    5.2 Model Performance
+### 5.2 Model Performance
     
-    * Summary of main results (metrics, comparisons among models)
+    * Summary of main results 
         
-    5.3 Additional Analyses
+On the held-out test set:
+
+Random forest: ROC AUC ≈ 0.807, accuracy ≈ 0.744, Brier ≈ 0.168
+
+Elastic-net logistic regression: ROC AUC ≈ 0.800, accuracy ≈ 0.737, Brier ≈ 0.167
+
+XGBoost: ROC AUC ≈ 0.823, accuracy ≈ 0.744, Brier ≈ 0.158
+
+### 5.3 Additional Analyses
     
-    * Feature importance (Shapley values), calibration, etc.
+    * Feature importance (Shapley values), calibration
+    
+- Hyperparameter tuning interpretation:
+
+Elastic-net: performance decreased at large penalties (underfitting); ridge-like settings were more stable.
+
+Random forest: mtry influenced AUC more than number of trees; trees mainly improved stability.
+
+- Feature importance:
+For RF/XGBoost, report permutation importance or gain-based importance for top predictors.
+
+- Calibration:
+Report Brier scores and optionally a calibration plot (reliability curve).
         
 ## 6. Discussion
+    
+### 6.1 Summary of Findings
 
-    Interpret the results and place them in context.
-    
-    6.1 Summary of Findings
-    
-    * What the results mean and how they relate to your aims
+We successfully built a reproducible pipeline for predicting prolonged ventilation using pre-vent EHR features. Both RF and elastic-net logistic regression achieved good discrimination (ROC AUC ~0.80) with similar calibration (Brier ~0.17). This suggests that both nonlinear and regularized linear approaches can be effective at the chosen prediction time (vent_start).
         
-    6.2 Comparison with Previous Work
+### 6.2 Comparison with Previous Work
     
-    * How your findings align with or differ from others
+We successfully built a reproducible pipeline for predicting prolonged ventilation using pre-vent EHR features. Both RF and elastic-net logistic regression achieved good discrimination (ROC AUC ~0.80) with similar calibration (Brier ~0.17). This suggests that both nonlinear and regularized linear approaches can be effective at the chosen prediction time (vent_start).
+
+### 6.3 Strengths and Limitations
+    
+    * Strengths
+
+- Reproducible BigQuery-based cohort and feature extraction.
+
+- Robust outcome definition using union-of-intervals to avoid double-counting overlaps.
+
+- Multiple models with consistent tuning and held-out test evaluation.
+
+
+    * Limitations
+
+- Missingness is substantial for certain measurements (e.g., ABG labs), and missingness may be informative and non-random.
+
+- Using a strict pre-vent_start window increases missingness for some features.
+
+- Outcome threshold (48h) is a modeling choice; performance may vary under other thresholds (e.g., 72h).
         
-    6.3 Strengths and Limitations
-    
-    * What worked well; what constraints or biases exist
-        
-    6.4 Implications
-    
-    * Practical, theoretical, or clinical applications of your findings
+### 6.4 Implications
+
+A model that predicts prolonged ventilation at ventilation initiation could support early resource planning and clinical triage. The union-of-intervals method is particularly important for reliable label definition in EHR procedure data.
     
 ## 7. Conclusion
 
-    Wrap up with clear takeaways and next steps.
-    
-    * Recap main conclusions
-    * Significance and contributions
-    * Suggestions for future research or improvements
+We developed a scalable, reproducible machine learning pipeline on MIMIC-IV to predict prolonged invasive ventilation among elderly ICU patients at ventilation initiation. By carefully defining ventilation duration using union-of-intervals and aligning predictors to pre-vent information, we obtained stable test performance around ROC AUC ~0.80. Random forest slightly outperformed elastic-net logistic regression, though both models exhibited comparable calibration. Future work could refine time windows, incorporate richer comorbidity features, and evaluate generalization across hospitals.
     
 ## 8. References
 
-    * List all sources cited in your paper
-    
-    * Use consistent citation formatting (e.g., APA, MLA, or journal style)
+Johnson, A. E. W., et al. MIMIC-IV (version 3.1). PhysioNet, 2024.
+
+Johnson, A. E. W., et al. MIMIC-IV, a freely accessible electronic health record dataset. Scientific Data, 2023.
+
+Kuhn, M., & Wickham, H. tidymodels (2020).
+
+Friedman, J. H., Hastie, T., & Tibshirani, R. Regularization Paths for GLMs via Coordinate Descent. JSS (2010).
+
+Wright, M. N., & Ziegler, A. ranger: A Fast Implementation of Random Forests. JSS (2017).
+
+Chen, T., & Guestrin, C. XGBoost: A Scalable Tree Boosting System. KDD (2016).
+
+tidymodels/parsnip documentation for XGBoost engine.
     
 ## 9. AI usage acknowledgement
 
+I used AI assistance (ChatGPT) to: (i) brainstorm project structure and phrasing, (ii) debug BigQuery/dbplyr and tidymodels code patterns, and (iii) draft and edit report text. All modeling decisions, cohort definitions, and final results were verified by running code and reviewing outputs.
 
 
-
-
-
-## Grading rubric for 203B (100 pts)
-
-- Data pipeline & cohort correctness (20)
-- EDA + required trajectory visualization (10)
-- Shiny app functionality and relevance (30)
-- Reproducibility + Git quality (35)
-- Ethics & responsible reporting (5)
-
-## Grading rubric for 212A (100 pts)
-
-- Clinical question & prediction framing (10 pts)  
-- Cohort construction validity for modeling (10 pts)
-- Preprocessing & feature engineering (15 pts)
-- Model set: at least 3 models of increasing complexity (15 pts)
-- Resampling & hyperparameter tuning (15 pts)
-- Train/test split design & leakage avoidance (10 pts)
-- Evaluation metrics, calibration, and model comparison (15 pts)
-- Interpretation of model behavior (10 pts)
-- Reproducibility & reporting quality (5 pts)
-- Limitations & responsible ML/ethics (5 pts)
 
 

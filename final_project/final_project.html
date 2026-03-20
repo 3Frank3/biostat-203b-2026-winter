@@ -2233,14 +2233,26 @@ vertical-align: -.125em;
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">4. Methods</a>
   <ul>
   <li><a href="#data-source-or-materials" id="toc-data-source-or-materials" class="nav-link" data-scroll-target="#data-source-or-materials">4.1 Data Source or Materials</a></li>
+  <li><a href="#variables-features" id="toc-variables-features" class="nav-link" data-scroll-target="#variables-features">4.2 Variables / Features</a></li>
+  <li><a href="#analytical-approach-modeling" id="toc-analytical-approach-modeling" class="nav-link" data-scroll-target="#analytical-approach-modeling">4.3 Analytical Approach / Modeling</a></li>
+  <li><a href="#model-evaluation" id="toc-model-evaluation" class="nav-link" data-scroll-target="#model-evaluation">4.4 Model Evaluation</a></li>
   </ul></li>
-  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">5. Results</a></li>
-  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">6. Discussion</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">5. Results</a>
+  <ul>
+  <li><a href="#cohort-sample-characteristics" id="toc-cohort-sample-characteristics" class="nav-link" data-scroll-target="#cohort-sample-characteristics">5.1 Cohort / Sample Characteristics</a></li>
+  <li><a href="#model-performance" id="toc-model-performance" class="nav-link" data-scroll-target="#model-performance">5.2 Model Performance</a></li>
+  <li><a href="#additional-analyses" id="toc-additional-analyses" class="nav-link" data-scroll-target="#additional-analyses">5.3 Additional Analyses</a></li>
+  </ul></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">6. Discussion</a>
+  <ul>
+  <li><a href="#summary-of-findings" id="toc-summary-of-findings" class="nav-link" data-scroll-target="#summary-of-findings">6.1 Summary of Findings</a></li>
+  <li><a href="#comparison-with-previous-work" id="toc-comparison-with-previous-work" class="nav-link" data-scroll-target="#comparison-with-previous-work">6.2 Comparison with Previous Work</a></li>
+  <li><a href="#strengths-and-limitations" id="toc-strengths-and-limitations" class="nav-link" data-scroll-target="#strengths-and-limitations">6.3 Strengths and Limitations</a></li>
+  <li><a href="#implications" id="toc-implications" class="nav-link" data-scroll-target="#implications">6.4 Implications</a></li>
+  </ul></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">7. Conclusion</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">8. References</a></li>
   <li><a href="#ai-usage-acknowledgement" id="toc-ai-usage-acknowledgement" class="nav-link" data-scroll-target="#ai-usage-acknowledgement">9. AI usage acknowledgement</a></li>
-  <li><a href="#grading-rubric-for-203b-100-pts" id="toc-grading-rubric-for-203b-100-pts" class="nav-link" data-scroll-target="#grading-rubric-for-203b-100-pts">Grading rubric for 203B (100 pts)</a></li>
-  <li><a href="#grading-rubric-for-212a-100-pts" id="toc-grading-rubric-for-212a-100-pts" class="nav-link" data-scroll-target="#grading-rubric-for-212a-100-pts">Grading rubric for 212A (100 pts)</a></li>
   </ul>
 </nav>
 </div>
@@ -2302,37 +2314,6 @@ loaded via a namespace (and not attached):
 [13] xfun_0.55         digest_0.6.37     rlang_1.1.7       evaluate_1.0.5   </code></pre>
 </div>
 </div>
-<p>Display my machine memory.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Totalram:   24.000 GiB 
-Freeram:   144.359 MiB </code></pre>
-</div>
-</div>
-<p>Load database libraries and the tidyverse frontend:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bigrquery)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dbplyr)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gtsummary)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-✔ dplyr     1.1.4     ✔ readr     2.1.5
-✔ forcats   1.0.1     ✔ stringr   1.5.2
-✔ ggplot2   4.0.0     ✔ tibble    3.3.0
-✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-✔ purrr     1.1.0     
-── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::filter() masks stats::filter()
-✖ dplyr::ident()  masks dbplyr::ident()
-✖ dplyr::lag()    masks stats::lag()
-✖ dplyr::sql()    masks dbplyr::sql()
-ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
-</div>
-</div>
 <section id="title-page" class="level2">
 <h2 class="anchored" data-anchor-id="title-page">1. Title Page</h2>
 <section id="project-title" class="level3">
@@ -2350,167 +2331,221 @@ Freeram:   144.359 MiB </code></pre>
 </section>
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">2. Abstract</h2>
-<p>Provide a succinct summary of your entire project (~250–300 words), including:</p>
 <section id="background" class="level3">
 <h3 class="anchored" data-anchor-id="background">Background</h3>
-<p>Context and why the problem matters</p>
+<p>Prolonged mechanical ventilation is clinically meaningful because it is strongly associated with increased ICU morbidity, including ventilator-associated complications/events, longer ICU length of stay, and higher mortality risk. Identifying patients at risk for prolonged ventilation can inform early clinical decision-making, resource allocation, and discussions with patients’ families regarding prognosis.</p>
 </section>
 <section id="objectives" class="level3">
 <h3 class="anchored" data-anchor-id="objectives">Objectives</h3>
-<p>Among ICU patients who receive invasive mechanical ventilation, classify the duration of ventilation (short vs moderate vs prolonged) using clinical and demographic features available at or immediately before the start of ventilation.</p>
+<p>Using the MIMIC-IV database, we developed and compared machine learning models to predict whether an ICU patient would have prolonged ventilation duration.</p>
 </section>
 <section id="methods---main-approach-and-data-sources" class="level3">
 <h3 class="anchored" data-anchor-id="methods---main-approach-and-data-sources">Methods - Main approach and data sources</h3>
+<p>We queried MIMIC-IV v3.1 via Google BigQuery and constructed a stay-level cohort of ICU stays with invasive ventilation events identified in procedureevents (itemid 225792). Because ventilation procedures were recorded as multiple time intervals per ICU stay that could overlap, we computed ventilation duration using a union-of-intervals approach to avoid double-counting. The index time was the start of ventilation (vent_start). Candidate predictors included demographics, admission/service variables, outpatient measurements (OMR) and ICU labs/vitals. For time alignment, we extracted the closest measurements prior to vent_start (e.g., last labs in a lookback window and nearest vital signs). We trained three algorithms using the tidymodels framework with 5-fold cross-validation and a held-out test set: elastic-net logistic regression (glmnet), random forest (ranger), and XGBoost. Missingness was handled using missingness indicators and median imputation within a reproducible recipe.</p>
 </section>
 <section id="results---key-findings" class="level3">
 <h3 class="anchored" data-anchor-id="results---key-findings">Results - Key findings</h3>
+<p>In the held-out test set, random forest achieved ROC AUC ≈ 0.807, accuracy ≈ 0.744, and Brier score ≈ 0.168. Elastic-net logistic regression achieved ROC AUC ≈ 0.800, accuracy ≈ 0.737, and Brier score ≈ 0.167. The test prevalence of prolonged ventilation was ≈ 27%. XGBoost achieved ROC AUC ≈ 0.823, accuracy ≈ 0.744</p>
 </section>
 <section id="conclusion---implications-and-potential-impact" class="level3">
 <h3 class="anchored" data-anchor-id="conclusion---implications-and-potential-impact">Conclusion - Implications and potential impact</h3>
+<p>Both tree-based and regularized linear models provided good discrimination and comparable calibration for predicting prolonged ventilation at the time of ventilation initiation. This approach demonstrates how scalable EHR pipelines (BigQuery + dbplyr) can support reproducible ICU risk prediction, with potential utility for early clinical triage and care planning.</p>
 </section>
 </section>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">3. Introduction</h2>
-<p>Establish your project’s rationale and research gap.</p>
 <section id="background-1" class="level3">
 <h3 class="anchored" data-anchor-id="background-1">Background</h3>
-<pre><code>    * Overview of the topic area
-    * Why it’s important or impactful
-    </code></pre>
+<p>Mechanical ventilation is a core ICU therapy but carries risks including ventilator-associated complications and long-term functional decline. Prolonged ventilation is clinically important because it often correlates with severity of illness, resource burden, and downstream outcomes such as longer ICU length of stay and higher care complexity. Predicting which patients will require prolonged ventilation at the time ventilation begins can inform early planning (e.g., staffing, respiratory support strategy, and anticipatory discussions).</p>
 </section>
 <section id="literature-review" class="level3">
 <h3 class="anchored" data-anchor-id="literature-review">Literature Review</h3>
 </section>
 <section id="problem-statement" class="level3">
 <h3 class="anchored" data-anchor-id="problem-statement">Problem Statement</h3>
-<pre><code>     * What specific issue or question your project addresses</code></pre>
+<p>In real-world ICU documentation, ventilation procedures may appear as multiple records per stay with overlaps and gaps. Naïvely summing durations can overestimate ventilation time and mislabel the outcome. Additionally, temporal alignment is critical: predictors must reflect information available before the prediction time to avoid leakage.</p>
 </section>
 <section id="objectives-1" class="level3">
 <h3 class="anchored" data-anchor-id="objectives-1">Objectives</h3>
-<pre><code>    * Clear and specific aims of the project
-    </code></pre>
+<ul>
+<li><p>Construct a reproducible ICU cohort of ventilated patients from MIMIC-IV using BigQuery/dbplyr.</p></li>
+<li><p>Define prolonged ventilation using a robust union-of-intervals duration computation.</p></li>
+<li><p>Train and compare 3 ML algorithms to predict prolonged ventilation at ventilation initiation using pre-vent predictors.</p></li>
+<li><p>Evaluate discrimination and calibration using cross-validation and a held-out test set.</p></li>
+</ul>
 </section>
 <section id="project-aimshypotheses" class="level3">
 <h3 class="anchored" data-anchor-id="project-aimshypotheses">Project Aims/Hypotheses</h3>
-<pre><code>    * Clearly define your research objectives  
-    * What you expect to find or demonstrate
-    </code></pre>
+<pre><code>* Aim</code></pre>
+<p>Predict prolonged ventilation (binary outcome) using structured EHR features available prior to ventilation start.</p>
+<pre><code>* Hypothesis</code></pre>
+<p>Tree-based models (random forest/XGBoost) will capture nonlinear relationships and interactions and achieve slightly higher discrimination than a regularized linear baseline, while elastic-net logistic regression will provide competitive and more interpretable performance.</p>
 </section>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">4. Methods</h2>
-<pre><code>Describe exactly how you conducted your project so others could reproduce it.</code></pre>
 <section id="data-source-or-materials" class="level3">
 <h3 class="anchored" data-anchor-id="data-source-or-materials">4.1 Data Source or Materials</h3>
-<ul>
-<li>Dataset(s) used</li>
-</ul>
+<pre><code>* Dataset(s) used: </code></pre>
 <p>We used the MIMIC-IV database to construct an end-to-end, reproducible machine learning pipeline in R. I accessed the data using Google BigQuery via dbplyr, enabling scalable querying and feature extraction.</p>
+<pre><code>* Index time:</code></pre>
+<p>The index time is defined as the ventilation initiation time (starttime) for the invasive ventilation event. All predictive features are derived from information available prior to (or at) the index time to avoid information leakage.</p>
+<pre><code>* Inclusion/Exclusion Criteria</code></pre>
 <ul>
-<li><p>Cohort definition Our study cohort consists of ICU stays with documented invasive mechanical ventilation events identified from the ICU procedureevents table using the invasive ventilation ItemID (225792). Each ICU stay is treated as a unit of analysis (stay_id). We link ventilation events to ICU stays (icustays) and hospital admissions (admissions) using MIMIC-IV identifiers (subject_id, hadm_id, stay_id). We restrict the cohort to adult patients based on the MIMIC-IV age representation (anchor age). We exclude records with missing or invalid ventilation timestamps required to compute ventilation duration.</p>
+<li><p>Included ICU stays with invasive ventilation procedure events in procedureevents (itemid 225792).</p></li>
+<li><p>Restricted to elderly patients: anchor_age &gt; 65.</p></li>
+<li><p>Excluded ventilation intervals with missing start/end times or negative durations.</p>
 <ul>
-<li><p>Inclusion/exclusion criteria if applicable</p></li>
-<li><p>Strategies for handling big data: BigQuery/dbplyr or Arrow/Parquet/DuckDB</p></li>
-<li><p>privacy and appropriate use and MIMIC credentialing context</p></li>
-</ul>
-<p>4.2 Variables / Features</p>
-<ul>
-<li><p>What variables are included and why</p></li>
-<li><p>How they were processed or transformed</p></li>
-</ul>
-<p>4.3 Analytical Approach / Modeling</p>
-<ul>
-<li><p>Index time, prediction window, and outcome definition</p></li>
-<li><p>Machine learning algorithms (require at least 3)</p></li>
-<li><p>Software used (e.g., R packages)</p></li>
-</ul>
-<p>4.4 Model Evaluation</p>
-<ul>
-<li><p>Performance metrics (e.g., ROC/AUC, accuracy)</p></li>
-<li><p>Validation methods (train/test split, cross-validation, etc.)</p></li>
+<li>Strategies for handling big data</li>
 </ul></li>
+</ul>
+<p>All cohort creation and feature extraction were performed using dbplyr lazy queries executed in BigQuery to avoid local memory limits. Only finalized modeling tables were collected into R for model training.</p>
+<pre><code>* privacy and appropriate use and MIMIC credentialing context</code></pre>
+<p>MIMIC-IV is a deidentified clinical dataset requiring credentialing and adherence to PhysioNet data use agreements. We used the dataset for educational research and avoided any attempts at reidentification.</p>
+</section>
+<section id="variables-features" class="level3">
+<h3 class="anchored" data-anchor-id="variables-features">4.2 Variables / Features</h3>
+<pre><code>* Outcome</code></pre>
+<ul>
+<li><p>Index time: vent_start, the earliest ventilation start time within an ICU stay after merging overlapping intervals.</p></li>
+<li><p>Outcome: y_prolong = 1 if total invasive ventilation duration (union-of-intervals) exceeds 48 hours; else 0.</p>
+<ul>
+<li>Key predictors</li>
+</ul></li>
+<li><p>Demographics: age (anchor_age), sex (gender), and admission variables (e.g., race, admission type/location)</p></li>
+<li><p>ICU vitals: heart rate, systolic/diastolic BP, temperature, respiratory rate — extracted as the closest measurement prior to vent_start.</p></li>
+<li><p>Labs: BUN/urea nitrogen, creatinine, sodium, potassium, and blood gas-related labs when available — extracted as the closest lab prior to vent_start within a lookback window</p></li>
+<li><p>OMR: BMI and blood pressure — extracted as the nearest measurements prior to vent_start, without requiring BMI and BP to occur on the same day.</p>
+<ul>
+<li>How they were processed or transformed</li>
+</ul></li>
+<li><p>We aligned all time-varying predictors relative to vent_start to avoid post-index leakage.</p></li>
+<li><p>We handled missingness using (i) missingness indicator variables and (ii) median imputation for numeric features inside a tidymodels recipe.</p></li>
+</ul>
+</section>
+<section id="analytical-approach-modeling" class="level3">
+<h3 class="anchored" data-anchor-id="analytical-approach-modeling">4.3 Analytical Approach / Modeling</h3>
+<pre><code>* Index time, prediction window </code></pre>
+<ul>
+<li><p>Prediction time = ventilation initiation (vent_start).</p></li>
+<li><p>Predictors were taken from measurements at or before vent_start (and within a defined lookback window for labs).</p>
+<ul>
+<li>Ventilation duration definition (union-of-intervals)</li>
+</ul></li>
+</ul>
+<p>Because a stay can contain multiple overlapping ventilation records, we:</p>
+<ul>
+<li><p>Sorted intervals by start time,</p></li>
+<li><p>Computed a running maximum end time,</p></li>
+<li><p>Began a new “segment” only when an interval started after the previous merged end,</p></li>
+<li><p>Summed merged segment durations to obtain total ventilation hours for the stay.</p></li>
+</ul>
+<p>This avoids double-counting overlapping documentation artifacts and yields a stable duration estimate.</p>
+<pre><code>* Machine learning algorithms </code></pre>
+<ul>
+<li><p>Elastic-net logistic regression (glmnet)</p></li>
+<li><p>Random forest (ranger)</p></li>
+<li><p>XGBoost (gradient boosted trees)</p></li>
+</ul>
+<p>All models were trained using the tidymodels ecosystem (recipes/workflows/tune).</p>
+<pre><code>* Software used</code></pre>
+<p>R packages included: tidymodels, recipes, parsnip, workflows, tune, yardstick, dbplyr, bigrquery, ranger, glmnet and xgboost.</p>
+</section>
+<section id="model-evaluation" class="level3">
+<h3 class="anchored" data-anchor-id="model-evaluation">4.4 Model Evaluation</h3>
+<pre><code>* Performance metrics</code></pre>
+<ul>
+<li><p>ROC AUC (discrimination)</p></li>
+<li><p>PR AUC (useful for class imbalance)</p></li>
+<li><p>Accuracy (threshold-based classification, default 0.5)</p></li>
+<li><p>Brier score (probability calibration; lower is better)</p>
+<ul>
+<li>Validation methods</li>
+</ul></li>
+<li><p>Train/test split with stratification on y_prolong</p></li>
+<li><p>5-fold cross-validation on the training set for hyperparameter tuning</p></li>
+<li><p>Final evaluation on a held-out test set using last_fit() (single unbiased test estimate)</p></li>
 </ul>
 </section>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">5. Results</h2>
-<pre><code>State your findings clearly and objectively. Provide tables and figures where appropriate.
-
-5.1 Cohort / Sample Characteristics
-
-* Description of your data (counts, demographics, etc.)
-    
-5.2 Model Performance
-
-* Summary of main results (metrics, comparisons among models)
-    
-5.3 Additional Analyses
-
-* Feature importance (Shapley values), calibration, etc.
+<section id="cohort-sample-characteristics" class="level3">
+<h3 class="anchored" data-anchor-id="cohort-sample-characteristics">5.1 Cohort / Sample Characteristics</h3>
+<pre><code>* Description of your data</code></pre>
+<p>The final modeling cohort contained ~15,149 ICU stays (elderly ventilated patients) with a test-set prolonged ventilation prevalence of ~27%.</p>
+<iframe role="img" src="data:text/html,%3C%21DOCTYPE%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf%2D8%22%2F%3E%0A%3Cstyle%3Ebody%7Bbackground%2Dcolor%3Awhite%3B%7D%3C%2Fstyle%3E%0A%0A%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%3Cdiv%20id%3D%22tecwcnfwjw%22%20style%3D%22padding%2Dleft%3A0px%3Bpadding%2Dright%3A0px%3Bpadding%2Dtop%3A10px%3Bpadding%2Dbottom%3A10px%3Boverflow%2Dx%3Aauto%3Boverflow%2Dy%3Aauto%3Bwidth%3Aauto%3Bheight%3Aauto%3B%22%3E%0A%20%20%3Cstyle%3E%23tecwcnfwjw%20table%20%7B%0A%20%20font%2Dfamily%3A%20system%2Dui%2C%20%27Segoe%20UI%27%2C%20Roboto%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%2C%20%27Apple%20Color%20Emoji%27%2C%20%27Segoe%20UI%20Emoji%27%2C%20%27Segoe%20UI%20Symbol%27%2C%20%27Noto%20Color%20Emoji%27%3B%0A%20%20%2Dwebkit%2Dfont%2Dsmoothing%3A%20antialiased%3B%0A%20%20%2Dmoz%2Dosx%2Dfont%2Dsmoothing%3A%20grayscale%3B%0A%7D%0A%0A%23tecwcnfwjw%20thead%2C%20%23tecwcnfwjw%20tbody%2C%20%23tecwcnfwjw%20tfoot%2C%20%23tecwcnfwjw%20tr%2C%20%23tecwcnfwjw%20td%2C%20%23tecwcnfwjw%20th%20%7B%0A%20%20border%2Dstyle%3A%20none%3B%0A%7D%0A%0A%23tecwcnfwjw%20p%20%7B%0A%20%20margin%3A%200%3B%0A%20%20padding%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ftable%20%7B%0A%20%20display%3A%20table%3B%0A%20%20border%2Dcollapse%3A%20collapse%3B%0A%20%20line%2Dheight%3A%20normal%3B%0A%20%20margin%2Dleft%3A%20auto%3B%0A%20%20margin%2Dright%3A%20auto%3B%0A%20%20color%3A%20%23333333%3B%0A%20%20font%2Dsize%3A%2016px%3B%0A%20%20font%2Dweight%3A%20normal%3B%0A%20%20font%2Dstyle%3A%20normal%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20width%3A%20auto%3B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23A8A8A8%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%202px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23A8A8A8%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%202px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcaption%20%7B%0A%20%20padding%2Dtop%3A%204px%3B%0A%20%20padding%2Dbottom%3A%204px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ftitle%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20font%2Dsize%3A%20125%25%3B%0A%20%20font%2Dweight%3A%20initial%3B%0A%20%20padding%2Dtop%3A%204px%3B%0A%20%20padding%2Dbottom%3A%204px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20border%2Dbottom%2Dwidth%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fsubtitle%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20font%2Dsize%3A%2085%25%3B%0A%20%20font%2Dweight%3A%20initial%3B%0A%20%20padding%2Dtop%3A%203px%3B%0A%20%20padding%2Dbottom%3A%205px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20border%2Dtop%2Dwidth%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fheading%20%7B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20text%2Dalign%3A%20center%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%201px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%201px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fbottom%5Fborder%20%7B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcol%5Fheadings%20%7B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%201px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%201px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcol%5Fheading%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20font%2Dweight%3A%20normal%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%201px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%201px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20vertical%2Dalign%3A%20bottom%3B%0A%20%20padding%2Dtop%3A%205px%3B%0A%20%20padding%2Dbottom%3A%206px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20overflow%2Dx%3A%20hidden%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcolumn%5Fspanner%5Fouter%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20font%2Dweight%3A%20normal%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20padding%2Dtop%3A%200%3B%0A%20%20padding%2Dbottom%3A%200%3B%0A%20%20padding%2Dleft%3A%204px%3B%0A%20%20padding%2Dright%3A%204px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcolumn%5Fspanner%5Fouter%3Afirst%2Dchild%20%7B%0A%20%20padding%2Dleft%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcolumn%5Fspanner%5Fouter%3Alast%2Dchild%20%7B%0A%20%20padding%2Dright%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcolumn%5Fspanner%20%7B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20vertical%2Dalign%3A%20bottom%3B%0A%20%20padding%2Dtop%3A%205px%3B%0A%20%20padding%2Dbottom%3A%205px%3B%0A%20%20overflow%2Dx%3A%20hidden%3B%0A%20%20display%3A%20inline%2Dblock%3B%0A%20%20width%3A%20100%25%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fspanner%5Frow%20%7B%0A%20%20border%2Dbottom%2Dstyle%3A%20hidden%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fgroup%5Fheading%20%7B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20font%2Dweight%3A%20initial%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%201px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%201px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20vertical%2Dalign%3A%20middle%3B%0A%20%20text%2Dalign%3A%20left%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fempty%5Fgroup%5Fheading%20%7B%0A%20%20padding%3A%200%2E5px%3B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20font%2Dweight%3A%20initial%3B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20vertical%2Dalign%3A%20middle%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffrom%5Fmd%20%3E%20%3Afirst%2Dchild%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffrom%5Fmd%20%3E%20%3Alast%2Dchild%20%7B%0A%20%20margin%2Dbottom%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Frow%20%7B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20margin%3A%2010px%3B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dwidth%3A%201px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%201px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%201px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20vertical%2Dalign%3A%20middle%3B%0A%20%20overflow%2Dx%3A%20hidden%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fstub%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20font%2Dweight%3A%20initial%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20border%2Dright%2Dstyle%3A%20solid%3B%0A%20%20border%2Dright%2Dwidth%3A%202px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fstub%5Frow%5Fgroup%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20font%2Dweight%3A%20initial%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20border%2Dright%2Dstyle%3A%20solid%3B%0A%20%20border%2Dright%2Dwidth%3A%202px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20vertical%2Dalign%3A%20top%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Frow%5Fgroup%5Ffirst%20td%20%7B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Frow%5Fgroup%5Ffirst%20th%20%7B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fsummary%5Frow%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffirst%5Fsummary%5Frow%20%7B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffirst%5Fsummary%5Frow%2Ethick%20%7B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Flast%5Fsummary%5Frow%20%7B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fgrand%5Fsummary%5Frow%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20text%2Dtransform%3A%20inherit%3B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffirst%5Fgrand%5Fsummary%5Frow%20%7B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20border%2Dtop%2Dstyle%3A%20double%3B%0A%20%20border%2Dtop%2Dwidth%3A%206px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Flast%5Fgrand%5Fsummary%5Frow%5Ftop%20%7B%0A%20%20padding%2Dtop%3A%208px%3B%0A%20%20padding%2Dbottom%3A%208px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20double%3B%0A%20%20border%2Dbottom%2Dwidth%3A%206px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fstriped%20%7B%0A%20%20background%2Dcolor%3A%20rgba%28128%2C%20128%2C%20128%2C%200%2E05%29%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ftable%5Fbody%20%7B%0A%20%20border%2Dtop%2Dstyle%3A%20solid%3B%0A%20%20border%2Dtop%2Dwidth%3A%202px%3B%0A%20%20border%2Dtop%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20solid%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffootnotes%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20none%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%202px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%202px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffootnote%20%7B%0A%20%20margin%3A%200px%3B%0A%20%20font%2Dsize%3A%2090%25%3B%0A%20%20padding%2Dtop%3A%204px%3B%0A%20%20padding%2Dbottom%3A%204px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fsourcenotes%20%7B%0A%20%20color%3A%20%23333333%3B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20border%2Dbottom%2Dstyle%3A%20none%3B%0A%20%20border%2Dbottom%2Dwidth%3A%202px%3B%0A%20%20border%2Dbottom%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dleft%2Dwidth%3A%202px%3B%0A%20%20border%2Dleft%2Dcolor%3A%20%23D3D3D3%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dwidth%3A%202px%3B%0A%20%20border%2Dright%2Dcolor%3A%20%23D3D3D3%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fsourcenote%20%7B%0A%20%20font%2Dsize%3A%2090%25%3B%0A%20%20padding%2Dtop%3A%204px%3B%0A%20%20padding%2Dbottom%3A%204px%3B%0A%20%20padding%2Dleft%3A%205px%3B%0A%20%20padding%2Dright%3A%205px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fleft%20%7B%0A%20%20text%2Dalign%3A%20left%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fcenter%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fright%20%7B%0A%20%20text%2Dalign%3A%20right%3B%0A%20%20font%2Dvariant%2Dnumeric%3A%20tabular%2Dnums%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffont%5Fnormal%20%7B%0A%20%20font%2Dweight%3A%20normal%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffont%5Fbold%20%7B%0A%20%20font%2Dweight%3A%20bold%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffont%5Fitalic%20%7B%0A%20%20font%2Dstyle%3A%20italic%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fsuper%20%7B%0A%20%20font%2Dsize%3A%2065%25%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Ffootnote%5Fmarks%20%7B%0A%20%20font%2Dsize%3A%2075%25%3B%0A%20%20vertical%2Dalign%3A%200%2E4em%3B%0A%20%20position%3A%20initial%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Fasterisk%20%7B%0A%20%20font%2Dsize%3A%20100%25%3B%0A%20%20vertical%2Dalign%3A%200%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Findent%5F1%20%7B%0A%20%20text%2Dindent%3A%205px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Findent%5F2%20%7B%0A%20%20text%2Dindent%3A%2010px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Findent%5F3%20%7B%0A%20%20text%2Dindent%3A%2015px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Findent%5F4%20%7B%0A%20%20text%2Dindent%3A%2020px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Egt%5Findent%5F5%20%7B%0A%20%20text%2Dindent%3A%2025px%3B%0A%7D%0A%0A%23tecwcnfwjw%20%2Ekatex%2Ddisplay%20%7B%0A%20%20display%3A%20inline%2Dflex%20%21important%3B%0A%20%20margin%2Dbottom%3A%200%2E75em%20%21important%3B%0A%7D%0A%0A%23tecwcnfwjw%20div%2EReactable%20%3E%20div%2Ert%2Dtable%20%3E%20div%2Ert%2Dthead%20%3E%20div%2Ert%2Dtr%2Ert%2Dtr%2Dgroup%2Dheader%20%3E%20div%2Ert%2Dth%2Dgroup%3Aafter%20%7B%0A%20%20height%3A%200px%20%21important%3B%0A%7D%0A%3C%2Fstyle%3E%0A%20%20%3Ctable%20class%3D%22gt%5Ftable%22%20data%2Dquarto%2Ddisable%2Dprocessing%3D%22false%22%20data%2Dquarto%2Dbootstrap%3D%22false%22%3E%0A%20%20%3Cthead%3E%0A%20%20%20%20%3Ctr%20class%3D%22gt%5Fcol%5Fheadings%22%3E%0A%20%20%20%20%20%20%3Cth%20class%3D%22gt%5Fcol%5Fheading%20gt%5Fcolumns%5Fbottom%5Fborder%20gt%5Fleft%22%20rowspan%3D%221%22%20colspan%3D%221%22%20scope%3D%22col%22%20id%3D%22label%22%3E%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3E%3Cstrong%3ECharacteristic%3C%2Fstrong%3E%3C%2Fspan%3E%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%20class%3D%22gt%5Fcol%5Fheading%20gt%5Fcolumns%5Fbottom%5Fborder%20gt%5Fcenter%22%20rowspan%3D%221%22%20colspan%3D%221%22%20scope%3D%22col%22%20id%3D%22stat%5F0%22%3E%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3E%3Cstrong%3EOverall%3C%2Fstrong%3E%3Cbr%20%2F%3E%0AN%20%3D%2015%2C149%3C%2Fspan%3E%3Cspan%20class%3D%22gt%5Ffootnote%5Fmarks%22%20style%3D%22white%2Dspace%3Anowrap%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Anormal%3Bline%2Dheight%3A0%3B%22%3E%3Csup%3E1%3C%2Fsup%3E%3C%2Fspan%3E%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%20class%3D%22gt%5Fcol%5Fheading%20gt%5Fcolumns%5Fbottom%5Fborder%20gt%5Fcenter%22%20rowspan%3D%221%22%20colspan%3D%221%22%20scope%3D%22col%22%20id%3D%22stat%5F1%22%3E%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3E%3Cstrong%3E%26lt%3B%3D%202%20days%3C%2Fstrong%3E%3Cbr%20%2F%3E%0AN%20%3D%209%2C952%3C%2Fspan%3E%3Cspan%20class%3D%22gt%5Ffootnote%5Fmarks%22%20style%3D%22white%2Dspace%3Anowrap%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Anormal%3Bline%2Dheight%3A0%3B%22%3E%3Csup%3E1%3C%2Fsup%3E%3C%2Fspan%3E%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%20class%3D%22gt%5Fcol%5Fheading%20gt%5Fcolumns%5Fbottom%5Fborder%20gt%5Fcenter%22%20rowspan%3D%221%22%20colspan%3D%221%22%20scope%3D%22col%22%20id%3D%22stat%5F2%22%3E%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3E%3Cstrong%3E%26gt%3B%202%20days%3C%2Fstrong%3E%3Cbr%20%2F%3E%0AN%20%3D%205%2C197%3C%2Fspan%3E%3Cspan%20class%3D%22gt%5Ffootnote%5Fmarks%22%20style%3D%22white%2Dspace%3Anowrap%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Anormal%3Bline%2Dheight%3A0%3B%22%3E%3Csup%3E1%3C%2Fsup%3E%3C%2Fspan%3E%3C%2Fth%3E%0A%20%20%20%20%20%20%3Cth%20class%3D%22gt%5Fcol%5Fheading%20gt%5Fcolumns%5Fbottom%5Fborder%20gt%5Fcenter%22%20rowspan%3D%221%22%20colspan%3D%221%22%20scope%3D%22col%22%20id%3D%22p%2Evalue%22%3E%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3E%3Cstrong%3Ep%2Dvalue%3C%2Fstrong%3E%3C%2Fspan%3E%3Cspan%20class%3D%22gt%5Ffootnote%5Fmarks%22%20style%3D%22white%2Dspace%3Anowrap%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Anormal%3Bline%2Dheight%3A0%3B%22%3E%3Csup%3E2%3C%2Fsup%3E%3C%2Fspan%3E%3C%2Fth%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Fthead%3E%0A%20%20%3Ctbody%20class%3D%22gt%5Ftable%5Fbody%22%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Eanchor%5Fage%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E75%2E00%20%2870%2E00%2C%2081%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E75%2E00%20%2870%2E00%2C%2081%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E75%2E00%20%2870%2E00%2C%2081%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E0%2E3%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Egender%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0F%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E6%2C262%20%2841%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C945%20%2840%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C317%20%2845%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0M%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E8%2C887%20%2859%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E6%2C007%20%2860%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C880%20%2855%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Erace%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Other%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C928%20%2819%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C854%20%2819%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C074%20%2821%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0ASIAN%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E400%20%282%2E6%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E225%20%282%2E3%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E175%20%283%2E4%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0BLACK%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C062%20%287%2E0%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E551%20%285%2E5%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E511%20%289%2E8%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0HISPANIC%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E300%20%282%2E0%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E196%20%282%2E0%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E104%20%282%2E0%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0WHITE%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E10%2C459%20%2869%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E7%2C126%20%2872%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C333%20%2864%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Efirst%5Fcareunit%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Cardiac%20Vascular%20Intensive%20Care%20Unit%20%28CVICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E5%2C695%20%2838%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2C972%20%2850%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E723%20%2814%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Medical%20Intensive%20Care%20Unit%20%28MICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C497%20%2816%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C106%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C391%20%2827%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Surgical%20Intensive%20Care%20Unit%20%28SICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C877%20%2812%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C093%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E784%20%2815%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Trauma%20SICU%20%28TSICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C602%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E887%20%288%2E9%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E715%20%2814%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Other%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C478%20%2823%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C894%20%2819%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C584%20%2830%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Elast%5Fcareunit%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Cardiac%20Vascular%20Intensive%20Care%20Unit%20%28CVICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E5%2C695%20%2838%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2C972%20%2850%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E723%20%2814%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Medical%20Intensive%20Care%20Unit%20%28MICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C497%20%2816%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C106%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C391%20%2827%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Surgical%20Intensive%20Care%20Unit%20%28SICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C877%20%2812%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C093%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E784%20%2815%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Trauma%20SICU%20%28TSICU%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C602%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E887%20%288%2E9%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E715%20%2814%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Other%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C478%20%2823%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C894%20%2819%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C584%20%2830%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Eadmission%5Ftype%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0EW%20EMER%2E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E6%2C251%20%2841%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C453%20%2835%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C798%20%2854%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0OBSERVATION%20ADMIT%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C585%20%2810%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E983%20%289%2E9%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E602%20%2812%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0SURGICAL%20SAME%20DAY%20ADMISSION%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C215%20%2815%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C923%20%2819%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E292%20%285%2E6%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0URGENT%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C437%20%2823%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C214%20%2822%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C223%20%2824%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Other%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C661%20%2811%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C379%20%2814%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E282%20%285%2E4%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Eadmission%5Flocation%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0EMERGENCY%20ROOM%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E5%2C184%20%2834%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C864%20%2829%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C320%20%2845%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0PHYSICIAN%20REFERRAL%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2C758%20%2831%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E3%2C858%20%2839%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E900%20%2817%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0TRANSFER%20FROM%20HOSPITAL%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2C220%20%2828%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E2%2C635%20%2826%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2C585%20%2830%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%3E%C2%A0%C2%A0%C2%A0%C2%A0Other%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E987%20%286%2E5%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E595%20%286%2E0%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E392%20%287%2E5%25%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3Cbr%20%2F%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Eurea%5Fnitrogen%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E23%2E00%20%2817%2E00%2C%2037%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E22%2E00%20%2816%2E00%2C%2033%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E28%2E00%20%2818%2E00%2C%2044%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Ecreatinine%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2E10%20%280%2E80%2C%201%2E60%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2E00%20%280%2E80%2C%201%2E40%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E1%2E20%20%280%2E80%2C%201%2E80%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Epotassium%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2E20%20%283%2E90%2C%204%2E60%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2E20%20%283%2E90%2C%204%2E50%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E4%2E20%20%283%2E80%2C%204%2E70%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E0%2E7%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Esodium%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E139%2E00%20%28136%2E00%2C%20141%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E139%2E00%20%28137%2E00%2C%20141%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E139%2E00%20%28136%2E00%2C%20142%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E0%2E031%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Epco2%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E42%2E00%20%2837%2E00%2C%2048%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E42%2E00%20%2837%2E00%2C%2047%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E43%2E00%20%2836%2E00%2C%2052%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Epo2%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E187%2E00%20%2897%2E00%2C%20291%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E218%2E00%20%28125%2E00%2C%20314%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E103%2E00%20%2867%2E00%2C%20202%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Ebase%5Fexcess%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%2D1%2E00%20%28%2D4%2E00%2C%200%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%2D1%2E00%20%28%2D3%2E00%2C%200%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%2D1%2E00%20%28%2D5%2E00%2C%201%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Eheart%5Frate%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E80%2E00%20%2870%2E00%2C%2092%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E80%2E00%20%2870%2E23%2C%2090%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E81%2E75%20%2870%2E00%2C%2095%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Esystolic%5Fbp%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E110%2E00%20%2897%2E00%2C%20126%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E110%2E00%20%2897%2E00%2C%20127%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E109%2E00%20%2897%2E00%2C%20124%2E67%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E0%2E052%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Ediastolic%5Fbp%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E58%2E50%20%2850%2E00%2C%2068%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E59%2E00%20%2850%2E00%2C%2069%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E58%2E00%20%2850%2E00%2C%2067%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E0%2E2%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Etemperature%5Fc%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E98%2E10%20%2897%2E60%2C%2098%2E80%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E98%2E00%20%2897%2E50%2C%2098%2E60%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E98%2E40%20%2897%2E70%2C%2099%2E10%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Erespiratory%5Frate%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E18%2E00%20%2815%2E00%2C%2021%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E18%2E00%20%2815%2E00%2C%2021%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E19%2E00%20%2816%2E00%2C%2022%2E00%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%3E%3Ctd%20headers%3D%22label%22%20class%3D%22gt%5Frow%20gt%5Fleft%22%20style%3D%22font%2Dweight%3A%20bold%3B%22%3Ehemoglobin%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F0%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E10%2E30%20%289%2E10%2C%2011%2E60%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F1%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E10%2E40%20%289%2E30%2C%2011%2E60%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22stat%5F2%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E10%2E20%20%288%2E80%2C%2011%2E70%29%3C%2Ftd%3E%0A%3Ctd%20headers%3D%22p%2Evalue%22%20class%3D%22gt%5Frow%20gt%5Fcenter%22%3E%3C0%2E001%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%3C%2Ftbody%3E%0A%20%20%3Ctfoot%3E%0A%20%20%20%20%3Ctr%20class%3D%22gt%5Ffootnotes%22%3E%0A%20%20%20%20%20%20%3Ctd%20class%3D%22gt%5Ffootnote%22%20colspan%3D%225%22%3E%3Cspan%20class%3D%22gt%5Ffootnote%5Fmarks%22%20style%3D%22white%2Dspace%3Anowrap%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Anormal%3Bline%2Dheight%3A0%3B%22%3E%3Csup%3E1%3C%2Fsup%3E%3C%2Fspan%3E%20%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3EMedian%20%28Q1%2C%20Q3%29%3B%20n%20%28%25%29%3C%2Fspan%3E%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%20%20%3Ctr%20class%3D%22gt%5Ffootnotes%22%3E%0A%20%20%20%20%20%20%3Ctd%20class%3D%22gt%5Ffootnote%22%20colspan%3D%225%22%3E%3Cspan%20class%3D%22gt%5Ffootnote%5Fmarks%22%20style%3D%22white%2Dspace%3Anowrap%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Anormal%3Bline%2Dheight%3A0%3B%22%3E%3Csup%3E2%3C%2Fsup%3E%3C%2Fspan%3E%20%3Cspan%20class%3D%27gt%5Ffrom%5Fmd%27%3EWilcoxon%20rank%20sum%20test%3B%20Pearson%E2%80%99s%20Chi%2Dsquared%20test%3C%2Fspan%3E%3C%2Ftd%3E%0A%20%20%20%20%3C%2Ftr%3E%0A%20%20%3C%2Ftfoot%3E%0A%3C%2Ftable%3E%0A%3C%2Fdiv%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A" width="100%" height="600px"></iframe>
+</section>
+<section id="model-performance" class="level3">
+<h3 class="anchored" data-anchor-id="model-performance">5.2 Model Performance</h3>
+<pre><code>* Summary of main results 
     </code></pre>
+<p>On the held-out test set:</p>
+<p>Random forest: ROC AUC ≈ 0.807, accuracy ≈ 0.744, Brier ≈ 0.168</p>
+<p>Elastic-net logistic regression: ROC AUC ≈ 0.800, accuracy ≈ 0.737, Brier ≈ 0.167</p>
+<p>XGBoost: ROC AUC ≈ 0.823, accuracy ≈ 0.744, Brier ≈ 0.158</p>
+</section>
+<section id="additional-analyses" class="level3">
+<h3 class="anchored" data-anchor-id="additional-analyses">5.3 Additional Analyses</h3>
+<pre><code>* Feature importance (Shapley values), calibration</code></pre>
+<ul>
+<li>Hyperparameter tuning interpretation:</li>
+</ul>
+<p>Elastic-net: performance decreased at large penalties (underfitting); ridge-like settings were more stable.</p>
+<p>Random forest: mtry influenced AUC more than number of trees; trees mainly improved stability.</p>
+<ul>
+<li><p>Feature importance: For RF/XGBoost, report permutation importance or gain-based importance for top predictors.</p></li>
+<li><p>Calibration: Report Brier scores and optionally a calibration plot (reliability curve).</p></li>
+</ul>
+</section>
 </section>
 <section id="discussion" class="level2">
 <h2 class="anchored" data-anchor-id="discussion">6. Discussion</h2>
-<pre><code>Interpret the results and place them in context.
-
-6.1 Summary of Findings
-
-* What the results mean and how they relate to your aims
-    
-6.2 Comparison with Previous Work
-
-* How your findings align with or differ from others
-    
-6.3 Strengths and Limitations
-
-* What worked well; what constraints or biases exist
-    
-6.4 Implications
-
-* Practical, theoretical, or clinical applications of your findings</code></pre>
+<section id="summary-of-findings" class="level3">
+<h3 class="anchored" data-anchor-id="summary-of-findings">6.1 Summary of Findings</h3>
+<p>We successfully built a reproducible pipeline for predicting prolonged ventilation using pre-vent EHR features. Both RF and elastic-net logistic regression achieved good discrimination (ROC AUC ~0.80) with similar calibration (Brier ~0.17). This suggests that both nonlinear and regularized linear approaches can be effective at the chosen prediction time (vent_start).</p>
+</section>
+<section id="comparison-with-previous-work" class="level3">
+<h3 class="anchored" data-anchor-id="comparison-with-previous-work">6.2 Comparison with Previous Work</h3>
+<p>We successfully built a reproducible pipeline for predicting prolonged ventilation using pre-vent EHR features. Both RF and elastic-net logistic regression achieved good discrimination (ROC AUC ~0.80) with similar calibration (Brier ~0.17). This suggests that both nonlinear and regularized linear approaches can be effective at the chosen prediction time (vent_start).</p>
+</section>
+<section id="strengths-and-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="strengths-and-limitations">6.3 Strengths and Limitations</h3>
+<pre><code>* Strengths</code></pre>
+<ul>
+<li><p>Reproducible BigQuery-based cohort and feature extraction.</p></li>
+<li><p>Robust outcome definition using union-of-intervals to avoid double-counting overlaps.</p></li>
+<li><p>Multiple models with consistent tuning and held-out test evaluation.</p>
+<ul>
+<li>Limitations</li>
+</ul></li>
+<li><p>Missingness is substantial for certain measurements (e.g., ABG labs), and missingness may be informative and non-random.</p></li>
+<li><p>Using a strict pre-vent_start window increases missingness for some features.</p></li>
+<li><p>Outcome threshold (48h) is a modeling choice; performance may vary under other thresholds (e.g., 72h).</p></li>
+</ul>
+</section>
+<section id="implications" class="level3">
+<h3 class="anchored" data-anchor-id="implications">6.4 Implications</h3>
+<p>A model that predicts prolonged ventilation at ventilation initiation could support early resource planning and clinical triage. The union-of-intervals method is particularly important for reliable label definition in EHR procedure data.</p>
+</section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">7. Conclusion</h2>
-<pre><code>Wrap up with clear takeaways and next steps.
-
-* Recap main conclusions
-* Significance and contributions
-* Suggestions for future research or improvements</code></pre>
+<p>We developed a scalable, reproducible machine learning pipeline on MIMIC-IV to predict prolonged invasive ventilation among elderly ICU patients at ventilation initiation. By carefully defining ventilation duration using union-of-intervals and aligning predictors to pre-vent information, we obtained stable test performance around ROC AUC ~0.80. Random forest slightly outperformed elastic-net logistic regression, though both models exhibited comparable calibration. Future work could refine time windows, incorporate richer comorbidity features, and evaluate generalization across hospitals.</p>
 </section>
 <section id="references" class="level2">
 <h2 class="anchored" data-anchor-id="references">8. References</h2>
-<pre><code>* List all sources cited in your paper
-
-* Use consistent citation formatting (e.g., APA, MLA, or journal style)</code></pre>
+<p>Johnson, A. E. W., et al. MIMIC-IV (version 3.1). PhysioNet, 2024.</p>
+<p>Johnson, A. E. W., et al. MIMIC-IV, a freely accessible electronic health record dataset. Scientific Data, 2023.</p>
+<p>Kuhn, M., &amp; Wickham, H. tidymodels (2020).</p>
+<p>Friedman, J. H., Hastie, T., &amp; Tibshirani, R. Regularization Paths for GLMs via Coordinate Descent. JSS (2010).</p>
+<p>Wright, M. N., &amp; Ziegler, A. ranger: A Fast Implementation of Random Forests. JSS (2017).</p>
+<p>Chen, T., &amp; Guestrin, C. XGBoost: A Scalable Tree Boosting System. KDD (2016).</p>
+<p>tidymodels/parsnip documentation for XGBoost engine.</p>
 </section>
 <section id="ai-usage-acknowledgement" class="level2">
 <h2 class="anchored" data-anchor-id="ai-usage-acknowledgement">9. AI usage acknowledgement</h2>
-</section>
-<section id="grading-rubric-for-203b-100-pts" class="level2">
-<h2 class="anchored" data-anchor-id="grading-rubric-for-203b-100-pts">Grading rubric for 203B (100 pts)</h2>
-<ul>
-<li>Data pipeline &amp; cohort correctness (20)</li>
-<li>EDA + required trajectory visualization (10)</li>
-<li>Shiny app functionality and relevance (30)</li>
-<li>Reproducibility + Git quality (35)</li>
-<li>Ethics &amp; responsible reporting (5)</li>
-</ul>
-</section>
-<section id="grading-rubric-for-212a-100-pts" class="level2">
-<h2 class="anchored" data-anchor-id="grading-rubric-for-212a-100-pts">Grading rubric for 212A (100 pts)</h2>
-<ul>
-<li>Clinical question &amp; prediction framing (10 pts)<br>
-</li>
-<li>Cohort construction validity for modeling (10 pts)</li>
-<li>Preprocessing &amp; feature engineering (15 pts)</li>
-<li>Model set: at least 3 models of increasing complexity (15 pts)</li>
-<li>Resampling &amp; hyperparameter tuning (15 pts)</li>
-<li>Train/test split design &amp; leakage avoidance (10 pts)</li>
-<li>Evaluation metrics, calibration, and model comparison (15 pts)</li>
-<li>Interpretation of model behavior (10 pts)</li>
-<li>Reproducibility &amp; reporting quality (5 pts)</li>
-<li>Limitations &amp; responsible ML/ethics (5 pts)</li>
-</ul>
+<p>I used AI assistance (ChatGPT) to: (i) brainstorm project structure and phrasing, (ii) debug BigQuery/dbplyr and tidymodels code patterns, and (iii) draft and edit report text. All modeling decisions, cohort definitions, and final results were verified by running code and reviewing outputs.</p>
 </section>
 
 </main>
