@@ -35,6 +35,8 @@ library(dplyr)
 library(tidymodels)
 library(ranger)
 library(GGally)
+library(xgboost)
+library(forcats)
 ```
 
 ```{r}
@@ -68,6 +70,7 @@ proc_tbl <- tbl(con_bq, "procedureevents") |>
   select(subject_id, hadm_id, stay_id, itemid, value, starttime, endtime) |>
   print()
 ```
+
 ```{r}
 patients_tbl <- tbl(con_bq, "patients") |>
   select(subject_id, gender, anchor_age) |>
@@ -92,6 +95,7 @@ stay_map <- cohort_proc |>
 ```
 
 divide group
+
 ```{r}
 x1 <- cohort_proc |>
   mutate(start_dt = starttime, end_dt = endtime) |>
@@ -161,15 +165,10 @@ cohort_tbl |>
 
 ```{r}
 cohort_tbl |>
-  head(20) |>
-  collect()
+  head(20) 
 ```
 
-
-
-
 ## feature
-
 
 ### admissions
 
@@ -191,17 +190,14 @@ admissions_tbl <- tbl(con_bq, "admissions") |>
 
 ```{r}
 icustays_tbl   <- tbl(con_bq, "icustays") |>
-  arrange(subject_id, stay_id) |>
-  print(width=inf)
+  arrange(subject_id, stay_id) 
 ```
 
 ### omr
 
-
 ```{r}
 omr_raw <- tbl(con_bq, "omr") |>
-  arrange(subject_id) |>
-  print(width=inf)
+  arrange(subject_id) 
 ```
 
 ```{r}
@@ -274,8 +270,9 @@ omr_tbl |>
 ### labevents
 
 ```{bash}
-zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i Alveolar
+zcat < ~/mimic/hosp/d_labitems.csv.gz | grep -i calculated
 ```
+
 ```{bash}
 zcat < ~/mimic/hosp/labevents.csv.gz \
 | awk -F, 'NR==1 || $5==50801' \
@@ -289,7 +286,7 @@ d_labitems_tbl <- tbl(con_bq, "d_labitems") |>
 
 ```{r}
 lab_items <- c(
-   51006, 50912, 50971, 50983, 50802, 50803, 50818, 50821, 50801
+   51006, 50912, 50971, 50983, 50802, 50818, 50821
   )
 ```
 
@@ -319,7 +316,8 @@ lab_map <- lab_map |>
 
 # --- 2) build dynamic summarise() expressions for pivoting ---
 pivot_exprs <- set_names(
-  lapply(lab_map$itemid, function(id) sql(sprintf("MAX(IF(itemid=%d, valuenum, NULL))", id))),
+  lapply(lab_map$itemid, 
+    function(id) sql(sprintf("MAX(IF(itemid=%d, valuenum, NULL))", id))),
   lab_map$col
 )
 
@@ -333,7 +331,9 @@ labevents_tbl <- tbl(con_bq, "labevents") |>
   ) |>
   # window: [vent_start - lookback_hours, vent_start]
   filter(sql("DATETIME(charttime)") <= vent_start) |>
-  filter(sql(paste0("DATETIME(charttime) >= DATETIME_SUB(vent_start, INTERVAL ", lookback_hours, " HOUR)"))) |>
+  filter(sql(paste0(
+    "DATETIME(charttime) >= DATETIME_SUB(vent_start, INTERVAL ",
+    lookback_hours, " HOUR)"))) |>
   # last charttime per stay_id x itemid
   group_by(stay_id, itemid) |>
   mutate(last_t = max(charttime)) |>
@@ -407,7 +407,6 @@ chartevents_tbl |>
   print(width=inf)
 ```
 
-
 ## putting things together
 
 ```{r}
@@ -424,19 +423,75 @@ model_tbl <- cohort_tbl |>
   glimpse() 
 ```
 
-
 ```{r}
 
-tbl1 <- model_tbl |>
-  # 只保留你想放進 table 的欄位（避免把 ID/time/leakage 放進去）
+model_tbl_pre <- model_tbl |>
+  mutate(
+    first_careunit      = fct_lump_n(factor(first_careunit),
+      n = 4, other_level = "Other"),
+    last_careunit       = fct_lump_n(factor(last_careunit),
+      n = 4, other_level = "Other"),
+    admission_type      = fct_lump_n(factor(admission_type),
+      n = 4, other_level = "Other"),
+    admission_location  = fct_lump_n(factor(admission_location),
+      n = 3, other_level = "Other"),
+    race = fct_collapse(
+      factor(race),
+      ASIAN = c(
+        "ASIAN",
+        "ASIAN - ASIAN INDIAN",
+        "ASIAN - CHINESE",
+        "ASIAN - KOREAN",
+        "ASIAN - SOUTH EAST ASIAN"
+      ),
+      BLACK = c(
+        "BLACK/AFRICAN",
+        "BLACK/AFRICAN AMERICAN",
+        "BLACK/CAPE VERDEAN",
+        "BLACK/CARIBBEAN ISLAND"
+      ),
+      HISPANIC = c(
+        "HISPANIC OR LATINO",
+        "HISPANIC/LATINO - CENTRAL AMERICAN",
+        "HISPANIC/LATINO - COLUMBIAN",
+        "HISPANIC/LATINO - CUBAN",
+        "HISPANIC/LATINO - DOMINICAN",
+        "HISPANIC/LATINO - GUATEMALAN",
+        "HISPANIC/LATINO - HONDURAN",
+        "HISPANIC/LATINO - MEXICAN",
+        "HISPANIC/LATINO - PUERTO RICAN",
+        "HISPANIC/LATINO - SALVADORAN"
+      ),
+      WHITE = c(
+        "WHITE",
+        "WHITE - BRAZILIAN",
+        "WHITE - EASTERN EUROPEAN",
+        "WHITE - OTHER EUROPEAN",
+        "WHITE - RUSSIAN"
+      ),
+      Other = c(
+        "AMERICAN INDIAN/ALASKA NATIVE",
+        "MULTIPLE RACE/ETHNICITY",
+        "NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER",
+        "SOUTH AMERICAN",
+        "PORTUGUESE",
+        "OTHER",
+        "PATIENT DECLINED TO ANSWER",
+        "UNKNOWN",
+        "UNABLE TO OBTAIN"
+      )
+    )
+  )
+
+
+tbl1 <- model_tbl_pre |>
   select(
     y_prolong,
     anchor_age, gender, race,
     first_careunit, last_careunit,
     admission_type, admission_location,
     urea_nitrogen, creatinine, potassium,
-    sodium, pco2, po2, alveolar_arterial_gradient,  
-    calculated_bicarbonate_whole_blood, base_excess,
+    sodium, pco2, po2, base_excess,
     heart_rate, systolic_bp, diastolic_bp, 
     temperature_c, respiratory_rate, hemoglobin
   ) |>
@@ -466,7 +521,6 @@ tbl1_gt <- tbl1 |>
 
 gtsave(tbl1_gt, "mimic_vent_cohort_summary.html")
 ```
-
 
 ```{r}
 check_keys <- function(x, name){
@@ -503,13 +557,30 @@ miss_tbl <- model_tbl |>
     miss_bg   = mean(is.na(hemoglobin)),
     miss_pco2 = mean(is.na(pco2)),
     miss_po2  = mean(is.na(po2)),
-    miss_aag  = mean(is.na(alveolar_arterial_gradient)),
-    miss_cbwb = mean(is.na(calculated_bicarbonate_whole_blood)),
     miss_be   = mean(is.na(base_excess))
   )
 
 miss_tbl
 
+```
+
+## Save the final tibble
+
+```{r}
+# make a directory mimiciv_shiny
+if (!dir.exists("finalproject_shiny")) {
+  dir.create("finalproject_shiny")
+}
+# save the final tibble
+model_tbl |>
+  write_rds("finalproject_shiny/final_project_cohort.rds", compress = "gz")
+```
+Close database connection and clear workspace.
+```{r}
+if (exists("con_bq")) {
+  dbDisconnect(con_bq)
+}
+rm(list = ls())
 ```
 
 ## model prep
@@ -541,6 +612,7 @@ dim(test_df)
 ## Logit modeling
 
 ### Recipe: missing indicator + median impute
+
 ```{r}
 logit_recipe <- recipe(y_prolong ~ ., data = train_df) |>
   step_zv(all_predictors()) |>
@@ -553,6 +625,7 @@ logit_recipe <- recipe(y_prolong ~ ., data = train_df) |>
 ```
 
 ### Model + workflow
+
 ```{r}
 logit_mod <- 
   logistic_reg(
@@ -570,6 +643,7 @@ logit_wf <- workflow() |>
 ```
 
 ### Tuning grid
+
 ```{r}
 logit_param_grid <- grid_regular(
   penalty(range = c(-6, 3)), 
@@ -579,8 +653,8 @@ logit_param_grid <- grid_regular(
   print()
 ```
 
+### CV
 
-### CV 
 ```{r}
 # Set cross-validation partitions.
 set.seed(203)
@@ -603,6 +677,7 @@ logit_fit
 ```
 
 ### Visualize CV results
+
 ```{r}
 logit_fit |>
   # aggregate metrics from K folds
@@ -623,7 +698,6 @@ logit_fit |>
 
 ```
 
-
 ### Select the best model.
 
 ```{r}
@@ -640,7 +714,6 @@ logit_final_wf <- logit_wf |>
 logit_final_wf
 ```
 
-
 ### Fit the whole training set, then predict the test cases
 
 ```{r}
@@ -649,13 +722,13 @@ logit_final_fit <-
   last_fit(split_obj)
 logit_final_fit
 ```
+
 ### Test metrics
+
 ```{r}
 logit_final_fit |> 
   collect_metrics()
 ```
-
-
 
 ## RF modeling
 
@@ -671,8 +744,7 @@ rf_recipe <- recipe(y_prolong ~ ., data = train_df) |>
   step_dummy(all_nominal_predictors(), one_hot = TRUE)
 ```
 
-
-### model 
+### model
 
 ```{r}
 rf_mod <- 
@@ -739,7 +811,6 @@ rf_fit |>
   labs(x = "Num. of Trees", y = "CV AUC")
 ```
 
-
 ### Show the top 5 models.
 
 ```{r}
@@ -779,3 +850,128 @@ rf_final_fit |>
   collect_metrics()
 ```
 
+## XGBoost
+
+### Recipe
+
+```{r}
+gb_recipe <- recipe(y_prolong ~ ., data = train_df) |>
+  step_zv(all_predictors()) |>
+  step_string2factor(all_nominal_predictors()) |>
+  step_unknown(all_nominal_predictors(), new_level = "Unknown") |>
+  step_indicate_na(all_numeric_predictors()) |>
+  step_impute_median(all_numeric_predictors()) |>
+  step_dummy(all_nominal_predictors(), one_hot = TRUE)
+```
+
+### model
+
+```{r}
+gb_mod <- 
+  boost_tree(
+    mode = "classification",
+    trees = 1000, 
+    tree_depth = tune(),
+    learn_rate = tune()
+  ) |> 
+  set_engine("xgboost")
+gb_mod
+```
+
+### Workflow
+
+```{r}
+gb_wf <- workflow() |>
+  add_recipe(gb_recipe) |>
+  add_model(gb_mod)
+gb_wf
+```
+
+### tuning grid
+
+```{r}
+param_grid <- grid_regular(
+  tree_depth(range = c(1L, 3L)),
+  learn_rate(range = c(-5, 2), trans = log10_trans()),
+  levels = c(3, 10)
+  )
+param_grid
+```
+
+
+
+### CV
+
+```{r}
+set.seed(203)
+
+gb_folds <- vfold_cv(train_df, v = 5, strata = y_prolong)
+gb_folds
+
+gb_fit <- gb_wf |>
+  tune_grid(
+    resamples = gb_folds,
+    grid = param_grid,
+    metrics = metric_set(roc_auc, accuracy)
+    )
+gb_fit
+```
+
+### Visualize CV results
+
+```{r}
+gb_fit |>
+  collect_metrics() |>
+  print(width = Inf) |>
+  filter(.metric == "roc_auc") |>
+  ggplot(mapping = aes(x = learn_rate, y = mean, color = factor(tree_depth))) +
+  geom_point() +
+  labs(x = "Learning Rate", y = "CV AUC") +
+  scale_x_log10()
+```
+
+### Show the top 5 models.
+
+```{r}
+gb_fit |>
+  show_best(metric = "roc_auc")
+```
+
+### select best model
+
+```{r}
+best_gb <- gb_fit |>
+  select_best(metric = "roc_auc")
+best_gb
+```
+
+### XGBoost Final workflow
+
+```{r}
+gb_final_wf <- gb_wf |>
+  finalize_workflow(best_gb)
+gb_final_wf
+```
+
+### Fit the whole training set, then predict the test cases
+
+```{r}
+gb_final_fit <- 
+  gb_final_wf |>
+  last_fit(split_obj)
+gb_final_fit
+```
+
+### Test metrics
+
+```{r}
+gb_final_fit |> 
+  collect_metrics()
+```
+
+# save the final tibble
+```{r}
+saveRDS(logit_final_wf, "finalproject_shiny/wf_logit.rds")
+saveRDS(rf_final_wf,    "finalproject_shiny/wf_rf.rds")
+saveRDS(gb_final_wf,   "finalproject_shiny/wf_xgb.rds")
+```
