@@ -969,9 +969,16 @@ gb_final_fit |>
   collect_metrics()
 ```
 
+```{r}
+logit_fit_trained <- fit(logit_final_wf, data = train_df)
+rf_fit_trained    <- fit(rf_final_wf,    data = train_df)
+xgb_fit_trained   <- fit(gb_final_wf,    data = train_df)
+```
+
+
 # save the final tibble
 ```{r}
-saveRDS(logit_final_wf, "finalproject_shiny/wf_logit.rds")
-saveRDS(rf_final_wf,    "finalproject_shiny/wf_rf.rds")
-saveRDS(gb_final_wf,   "finalproject_shiny/wf_xgb.rds")
+saveRDS(logit_fit_trained, "finalproject_shiny/wf_logit.rds")
+saveRDS(rf_fit_trained, "finalproject_shiny/wf_rf.rds")
+saveRDS(xgb_fit_trained, "finalproject_shiny/wf_xgb.rds")
 ```

@@ -51,14 +51,15 @@ Both tree-based and regularized linear models provided good discrimination and c
 ## 3. Introduction
 
 ### Background
-Mechanical ventilation is a core ICU therapy but carries risks including ventilator-associated complications and long-term functional decline. Prolonged ventilation is clinically important because it often correlates with severity of illness, resource burden, and downstream outcomes such as longer ICU length of stay and higher care complexity. Predicting which patients will require prolonged ventilation at the time ventilation begins can inform early planning (e.g., staffing, respiratory support strategy, and anticipatory discussions).
-        
-### Literature Review
+
+Mechanical ventilation is a core ICU therapy but carries risks including ventilator-associated complications and long-term functional decline. Prolonged ventilation is clinically important because it often correlates with severity of illness, resource burden, and downstream outcomes such as longer ICU length of stay and higher care complexity. Predicting which patients will require prolonged ventilation at the time ventilation begins can inform early planning 
 
 ### Problem Statement
+
 In real-world ICU documentation, ventilation procedures may appear as multiple records per stay with overlaps and gaps. Naïvely summing durations can overestimate ventilation time and mislabel the outcome. Additionally, temporal alignment is critical: predictors must reflect information available before the prediction time to avoid leakage.
     
 ### Objectives
+
 - Construct a reproducible ICU cohort of ventilated patients from MIMIC-IV using BigQuery/dbplyr.
 
 - Define prolonged ventilation using a robust union-of-intervals duration computation.
@@ -267,19 +268,16 @@ We developed a scalable, reproducible machine learning pipeline on MIMIC-IV to p
     
 ## 8. References
 
-Johnson, A. E. W., et al. MIMIC-IV (version 3.1). PhysioNet, 2024.
+- Klompas, M., Branson, R., Eichenwald, E. C., Greene, L. R., Howell, M. D., Lee, G., Magill, S. S., Maragakis, L. L., Priebe, G. P., Speck, K., Yokoe, D. S., & Berenholtz, S. M. (2014). Strategies to prevent ventilator-associated pneumonia in acute care hospitals: 2014 update. Infection Control & Hospital Epidemiology, 35(8), 915–936. https://doi.org/10.1086/677144
+ 
+- Hill, A. D., Fowler, R. A., Burns, K. E. A., Rose, L., Pinto, R. L., & Scales, D. C. (2017). Long-term outcomes and health care utilization after prolonged mechanical ventilation. Annals of the American Thoracic Society, 14(3), 355–362. https://doi.org/10.1513/AnnalsATS.201610-792OC
 
-Johnson, A. E. W., et al. MIMIC-IV, a freely accessible electronic health record dataset. Scientific Data, 2023.
+- Johnson, A., Bulgarelli, L., Pollard, T., Gow, B., Moody, B., Horng, S., Celi, L. A., & Mark, R. (2024). MIMIC-IV (version 3.1) [Data set]. PhysioNet. https://doi.org/10.13026/kpb9-mt58
 
-Kuhn, M., & Wickham, H. tidymodels (2020).
+- Johnson, A. E. W., Bulgarelli, L., Shen, L., Gayles, A., Shammout, A., Horng, S., Pollard, T. J., Hao, S., Moody, B., Gow, B., Lehman, L.-W. H., Celi, L. A., & Mark, R. G. (2023). MIMIC-IV, a freely accessible electronic health record dataset. Scientific Data, 10(1), 1. https://doi.org/10.1038/s41597-022-01899-x
 
-Friedman, J. H., Hastie, T., & Tibshirani, R. Regularization Paths for GLMs via Coordinate Descent. JSS (2010).
-
-Wright, M. N., & Ziegler, A. ranger: A Fast Implementation of Random Forests. JSS (2017).
-
-Chen, T., & Guestrin, C. XGBoost: A Scalable Tree Boosting System. KDD (2016).
-
-tidymodels/parsnip documentation for XGBoost engine.
+- Kuhn, M., & Wickham, H. (2020). Tidymodels: A collection of packages for modeling and machine learning using tidyverse principles [R package]. https://www.tidymodels.org
+ 
     
 ## 9. AI usage acknowledgement
 

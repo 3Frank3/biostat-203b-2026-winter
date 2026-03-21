@@ -1,4 +1,7 @@
 # app.R
+
+options(shiny.sanitize.errors = FALSE)
+
 library(shiny)
 library(dplyr)
 library(ggplot2)
@@ -7,12 +10,9 @@ library(readr)
 library(tidymodels)
 library(purrr)
 
-# -----------------------
-# Load data
-# -----------------------
+
 df <- readRDS("final_project_cohort.rds")
 
-# Ensure outcome is factor with levels 0/1
 if (!is.factor(df$y_prolong)) {
   df <- df |> mutate(y_prolong = factor(y_prolong, levels = c(0, 1)))
 } else {
@@ -20,12 +20,7 @@ if (!is.factor(df$y_prolong)) {
   df$y_prolong <- factor(df$y_prolong, levels = c("0", "1"))
 }
 
-# Optional: make sure IDs are not character if you prefer
-# df <- df |> mutate(across(any_of(c("stay_id","subject_id","hadm_id")), as.character))
 
-# -----------------------
-# Load models (3 workflows)
-# -----------------------
 wf_logit <- readRDS("wf_logit.rds")
 wf_rf    <- readRDS("wf_rf.rds")
 wf_xgb   <- readRDS("wf_xgb.rds")
@@ -36,15 +31,27 @@ models <- list(
   "XGBoost"              = wf_xgb
 )
 
-# -----------------------
-# Utilities
-# -----------------------
+
 safe_num <- function(x) {
   if (is.null(x)) return(NA_real_)
   suppressWarnings(as.numeric(x))
 }
 
-# A small set of default features for manual input (edit freely)
+get_pos_prob <- function(wf, new_data) {
+  p <- predict(wf, new_data = new_data, type = "prob")
+  # p is a tibble with columns like .pred_0/.pred_1 OR .pred_no/.pred_yes
+  pred_cols <- names(p)[grepl("^\\.pred_", names(p))]
+  if (length(pred_cols) < 2) stop("No probability columns found in predict(type='prob') output.")
+
+  # If ".pred_1" exists, use it; else use the SECOND class prob (event level)
+  if (".pred_1" %in% pred_cols) {
+    as.numeric(p$.pred_1)
+  } else {
+    as.numeric(p[[pred_cols[2]]])
+  }
+}
+
+
 default_manual_features <- intersect(c(
   "anchor_age", "gender",
   "bmi", "sbp", "dbp",
@@ -56,7 +63,7 @@ id_cols <- intersect(c("stay_id", "subject_id", "hadm_id"), names(df))
 
 # -----------------------
 # UI
-# -----------------------
+# ----------------------
 ui <- fluidPage(
   titlePanel("MIMIC-IV Prolonged Ventilation Shiny App"),
   tabsetPanel(
@@ -97,6 +104,9 @@ ui <- fluidPage(
         mainPanel(
           h4("Cohort summary"),
           verbatimTextOutput("cohort_summary"),
+          h4("Cohort charts"),
+          plotOutput("cohort_outcome_plot", height = "220px"),
+          plotOutput("cohort_dist_plot", height = "260px"),
           h4("Preview (first 200 rows)"),
           DTOutput("cohort_table")
         )
@@ -215,6 +225,34 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   # ---- Tab 1: Cohort explorer ----
+  output$cohort_outcome_plot <- renderPlot({
+  x <- cohort_filtered()
+  # outcome bar
+  ggplot(x, aes(x = y_prolong)) +
+    geom_bar() +
+    labs(x = "y_prolong", y = "Count", title = "Outcome distribution") +
+    theme_minimal()
+})
+
+output$cohort_dist_plot <- renderPlot({
+  x <- cohort_filtered()
+
+  # If vent_hr exists, show distribution; otherwise show age distribution if available
+  if ("vent_hr" %in% names(x)) {
+    ggplot(x, aes(x = vent_hr)) +
+      geom_histogram(bins = 40) +
+      labs(x = "vent_hr", y = "Count", title = "Vent hours distribution") +
+      theme_minimal()
+  } else if ("anchor_age" %in% names(x)) {
+    ggplot(x, aes(x = anchor_age)) +
+      geom_histogram(bins = 30) +
+      labs(x = "anchor_age", y = "Count", title = "Age distribution") +
+      theme_minimal()
+  } else {
+    plot.new()
+    text(0.5, 0.5, "No vent_hr or anchor_age column found.")
+  }
+})
   cohort_filtered <- reactive({
     x <- df
 
@@ -276,15 +314,26 @@ server <- function(input, output, session) {
     datatable(x |> select(all_of(cols)), options = list(pageLength = 10, scrollX = TRUE))
   })
 
-  output$vent_plot <- renderPlot({
-    x <- patient_rows()
-    if (!all(c("stay_id","vent_hr","y_prolong") %in% names(x))) return(NULL)
-    ggplot(x, aes(x = factor(stay_id), y = vent_hr, fill = y_prolong)) +
-      geom_col() +
-      coord_flip() +
-      labs(x = "stay_id", y = "vent_hr", title = "Vent hours by stay") +
-      theme_minimal()
-  })
+output$vent_plot <- renderPlot({
+  x <- patient_rows()
+  if (!all(c("stay_id","vent_hr","y_prolong") %in% names(x))) return(NULL)
+
+  # order stays by vent_hr
+  x <- x |> mutate(stay_id_f = reorder(as.factor(stay_id), vent_hr))
+
+  ggplot(x, aes(x = stay_id_f, y = vent_hr, fill = y_prolong)) +
+    geom_col(width = 0.75) +
+    coord_flip() +
+    geom_vline(xintercept = NA) +  # no-op, keeps structure
+    geom_hline(yintercept = 48, linetype = "dashed") +
+    labs(
+      x = "stay_id",
+      y = "Union vent hours",
+      title = "Vent hours by stay (sorted)",
+      subtitle = "Dashed line = 48-hour prolonged threshold"
+    ) +
+    theme_minimal()
+})
 
   output$stay_snapshot <- renderDT({
     x <- patient_rows()
@@ -336,21 +385,26 @@ server <- function(input, output, session) {
   })
 
   # probability for selected model
-  pred_prob <- eventReactive(input$run_pred, {
-    new_data <- pred_input()
-    wf <- chosen_wf()
-    p <- predict(wf, new_data = new_data, type = "prob")
-    as.numeric(p$.pred_1)
-  })
+pred_prob <- eventReactive(input$run_pred, {
+  new_data <- pred_input()
+  wf <- chosen_wf()
+  get_pos_prob(wf, new_data)
+})
 
   # probabilities for all models (nice demo)
-  pred_all_models <- eventReactive(input$run_pred, {
-    new_data <- pred_input()
-    tibble(
-      model = names(models),
-      prob_prolong = map_dbl(models, \(wf) as.numeric(predict(wf, new_data = new_data, type = "prob")$.pred_1))
-    )
-  })
+pred_all_models <- eventReactive(input$run_pred, {
+  new_data <- pred_input()
+
+  safe_get <- purrr::possibly(
+    function(wf) get_pos_prob(wf, new_data),
+    otherwise = NA_real_
+  )
+
+  tibble(
+    model = names(models),
+    prob_prolong = purrr::map_dbl(models, safe_get)
+  )
+})
 
   output$pred_all_models_tbl <- renderDT({
     req(pred_all_models())
@@ -380,5 +434,7 @@ server <- function(input, output, session) {
     )
   })
 }
+
+
 
 shinyApp(ui, server)
